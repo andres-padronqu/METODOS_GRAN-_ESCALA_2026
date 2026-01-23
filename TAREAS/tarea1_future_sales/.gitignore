@@ -1,0 +1,17 @@
+# Python / env
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Data & artifacts (NO subir)
+data/
+artifacts/
+*.csv
+*.parquet
+*.pkl
+*.joblib
+
+# OS / editor
+.DS_Store
+.vscode/
