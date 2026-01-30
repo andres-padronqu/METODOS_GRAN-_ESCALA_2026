@@ -1,17 +1,60 @@
-# Python / env
-.venv/
-__pycache__/
-*.pyc
-.ipynb_checkpoints/
-
-# Data & artifacts (NO subir)
-data/
-artifacts/
-*.csv
-*.parquet
-*.pkl
-*.joblib
-
-# OS / editor
+# ------------------------------
+# macOS / editor
+# ------------------------------
 .DS_Store
-.vscode/
+
+# ------------------------------
+# Python
+# ------------------------------
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.python-version
+
+# Entornos virtuales (NO se suben)
+.venv/
+venv/
+.env/
+
+# ------------------------------
+# Jupyter / misc
+# ------------------------------
+.Rhistory
+
+# ------------------------------
+# Logs / training artifacts
+# ------------------------------
+catboost_info/
+
+# ------------------------------
+# Data (normalmente NO se sube; deja .gitkeep)
+# ------------------------------
+data/raw/*
+data/prep/*
+data/inference/*
+data/predictions/*
+!data/raw/.gitkeep
+!data/prep/.gitkeep
+!data/inference/.gitkeep
+!data/predictions/.gitkeep
+
+# ------------------------------
+# Artifacts (modelos y salidas)
+# ------------------------------
+artifacts/**/*.joblib
+artifacts/**/*.pkl
+artifacts/**/*.csv
+artifacts/**/*.parquet
+artifacts/**/*.gz
+
+# ------------------------------
+# Reportes (opcional)
+# ------------------------------
+*.pdf
+*.docx
+
+# ------------------------------
+# Otros archivos auxiliares
+# ------------------------------
+tree.txt
+

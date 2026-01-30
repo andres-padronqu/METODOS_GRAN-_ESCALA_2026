@@ -1,15 +1,20 @@
-# MÉTODOS DE GRAN ESCALA — 2026
+# Tarea 02 — Predict Future Sales (Repo + Scripts)
 
-Repositorio de tareas y notebooks del curso **Arquitectura de Productos de Datos y Métodos de Gran Escala (2026)**.
+Este repositorio convierte el trabajo de la Tarea 01 (notebooks) en un pipeline reproducible con **scripts de Python**, listo para ejecutarse de forma automática en servidores (sin intervención humana).
 
-## Estructura
-- `TAREAS/`
-  - `tarea1_future_sales/`
-    - `notebooks/`: exploración, feature engineering, modelos y entregable
-    - `pyproject.toml`, `uv.lock`: entorno del proyecto (uv)
+## Estructura del repositorio
 
-## Cómo correr
-1) Clona el repo
-```bash
-git clone https://github.com/andres-padronqu/METODOS_GRAN-_ESCALA_2026.git
-cd METODOS_GRAN-_ESCALA_2026
+- `notebooks/`: notebooks exploratorios (EDA, experimentos, etc.)
+- `src/`: scripts ejecutables (prep/train/inference)
+- `data/`:
+  - `raw/`: datos originales
+  - `prep/`: datos preparados para modelado
+  - `inference/`: datos para predicciones batch
+  - `predictions/`: salidas de predicción batch
+- `artifacts/`: objetos generados (modelo entrenado, reportes, etc.)
+
+Árbol (ejemplo):
+
+```text
+PASTE_TREE_HERE
+
