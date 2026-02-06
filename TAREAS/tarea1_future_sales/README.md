@@ -44,10 +44,12 @@ tarea1_future_sales/
 
 ---
 
-## Instalación (setup)
-
-Desde la raíz del repositorio:
+## Quickstart
 
 ```bash
 uv sync
+uv run python -m src.prep
+uv run python -m src.train
+uv run python -m src.inference
+
 
