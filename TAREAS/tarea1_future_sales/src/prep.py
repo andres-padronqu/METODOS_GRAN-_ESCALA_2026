@@ -11,10 +11,11 @@ It aggregates daily sales into monthly target and builds lag features.
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
+import time
 
 import pandas as pd
 
+from src.utils.logging_utils import setup_logger
 from src.utils.paths import get_repo_root
 from src.utils.validation import ensure_dir, require_file, require_non_empty
 
@@ -97,9 +98,7 @@ def add_target_lags(features_df: pd.DataFrame, lag_months: list[int]) -> pd.Data
     lagged_df = features_df.copy()
 
     for lag in lag_months:
-        shifted_df = features_df[
-            ["date_block_num", "shop_id", "item_id", TARGET_COLUMN]
-        ].copy()
+        shifted_df = features_df[["date_block_num", "shop_id", "item_id", TARGET_COLUMN]].copy()
         shifted_df["date_block_num"] = shifted_df["date_block_num"] + lag
         shifted_df = shifted_df.rename(columns={TARGET_COLUMN: f"{TARGET_COLUMN}_lag_{lag}"})
 
@@ -149,6 +148,19 @@ def main() -> None:
     prepared_data_dir = (project_root / args.prep_dir).resolve()
     inference_data_dir = (project_root / args.inference_dir).resolve()
 
+    # -------------------------
+    # Logging setup
+    # -------------------------
+    start_time = time.time()
+    log_dir = project_root / "artifacts" / "logs"
+    logger = setup_logger(log_dir, "prep")
+
+    logger.info("Starting prep step")
+    logger.info("raw_data_dir=%s", raw_data_dir.relative_to(project_root))
+    logger.info("prepared_data_dir=%s", prepared_data_dir)
+    logger.info("inference_data_dir=%s", inference_data_dir)
+
+    # Ensure output directories exist
     ensure_dir(prepared_data_dir)
     ensure_dir(inference_data_dir)
 
@@ -172,18 +184,30 @@ def main() -> None:
 
     lag_months = parse_lags(args.lags)
 
+    logger.info("Loaded sales_train rows=%d", len(sales_df))
+    logger.info("Loaded test rows=%d", len(test_df))
+    logger.info("Loaded items rows=%d", len(items_df))
+    logger.info("Using lags=%s", lag_months)
+
     # -------------------------
     # Build training features
     # -------------------------
     monthly_sales_df = build_monthly_target(sales_df)
     full_monthly_df = build_monthly_grid(monthly_sales_df)
 
-    train_features_df = (
-        full_monthly_df.pipe(add_item_category, items_df=items_df).pipe(add_target_lags, lag_months=lag_months)
+    train_features_df = full_monthly_df.pipe(add_item_category, items_df=items_df).pipe(
+        add_target_lags, lag_months=lag_months
     )
 
     train_features_path = prepared_data_dir / args.train_out
     train_features_df.to_csv(train_features_path, index=False, compression="gzip")
+
+    logger.info(
+        "Saved train features -> %s (rows=%d, cols=%d)",
+        train_features_path,
+        len(train_features_df),
+        train_features_df.shape[1],
+    )
 
     # -------------------------
     # Build test features (next month)
@@ -217,8 +241,15 @@ def main() -> None:
     test_features_path = inference_data_dir / args.test_out
     test_features_df.to_csv(test_features_path, index=False, compression="gzip")
 
-    print(f"[prep] OK -> {train_features_path}")
-    print(f"[prep] OK -> {test_features_path}")
+    logger.info(
+        "Saved test features -> %s (rows=%d, cols=%d)",
+        test_features_path,
+        len(test_features_df),
+        test_features_df.shape[1],
+    )
+
+    duration = time.time() - start_time
+    logger.info("Finished prep step. Duration: %.2f seconds", duration)
 
 
 if __name__ == "__main__":
