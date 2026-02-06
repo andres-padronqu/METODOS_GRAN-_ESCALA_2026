@@ -1,0 +1,9 @@
+2026-02-06 16:21:31,497 - inference - INFO - Starting inference step
+2026-02-06 16:21:31,498 - inference - INFO - inference_features_path=data/inference/features_test.csv.gz
+2026-02-06 16:21:31,498 - inference - INFO - model_artifact_path=artifacts/models/final_model.joblib
+2026-02-06 16:21:31,498 - inference - INFO - predictions_output_path=data/predictions/submission.csv
+2026-02-06 16:21:32,811 - inference - INFO - Loaded inference rows=214200 cols=8
+2026-02-06 16:21:32,811 - inference - INFO - n_feature_columns=7
+2026-02-06 16:21:34,668 - inference - INFO - Predictions generated. Clipped to [0, 20].
+2026-02-06 16:21:35,029 - inference - INFO - Saved submission -> data/predictions/submission.csv
+2026-02-06 16:21:35,029 - inference - INFO - Finished inference step. Duration: 3.53 seconds
