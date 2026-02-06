@@ -1,67 +1,38 @@
-# Tarea 02 — Predict Future Sales (Repo + Scripts)
+# Predict Future Sales (Kaggle) — Production-Ready ML Pipeline
 
-Este repositorio convierte el trabajo de la Tarea 01 (notebooks) en un pipeline reproducible con **scripts de Python**, listo para ejecutarse de forma automática en servidores (sin intervención humana).
+Este repositorio implementa un pipeline reproducible para el reto **Predict Future Sales** de Kaggle. El objetivo es transformar datos de ventas diarias a un dataset mensual, construir *features* (incluyendo *lags*), entrenar un modelo de regresión y generar un archivo de **submission** con el formato requerido por Kaggle.
+
+El proyecto está estructurado como un paquete de Python (`src/`) con scripts modulares para **preprocesamiento**, **entrenamiento** e **inferencia**, siguiendo buenas prácticas de ingeniería: rutas robustas con `pathlib`, validaciones explícitas, y artefactos versionables mediante un flujo claro.
+
+---
 
 ## Estructura del repositorio
 
-- `notebooks/`: notebooks exploratorios (EDA, experimentos, etc.)
-- `src/`: scripts ejecutables (prep/train/inference)
-- `data/`:
-  - `raw/`: datos originales
-  - `prep/`: datos preparados para modelado
-  - `inference/`: datos para predicciones batch
-  - `predictions/`: salidas de predicción batch
-- `artifacts/`: objetos generados (modelo entrenado, reportes, etc.)
-
-Árbol (ejemplo):
+> Generado con `tree -a -L 3`
 
 ```text
-
-
-├── .gitignore
-├── .python-version
-├── .Rhistory
-├── data
-│   ├── inference
-│   │   ├── .gitkeep
-│   │   └── test_features.csv.gz
-│   ├── predictions
-│   │   ├── .gitkeep
-│   │   └── submission.csv
-│   ├── prep
-│   │   ├── .gitkeep
-│   │   └── dataset_monthly.csv.gz
-│   └── raw
-│       ├── .gitkeep
-│       ├── item_categories_en.csv
-│       ├── items_en.csv
-│       ├── sales_train.csv
-│       ├── sample_submission.csv
-│       ├── shops_en.csv
-│       └── test.csv
-├── main.py
-├── notebooks
-│   ├── 01_eda.ipynb
-│   ├── 02_train_submit.ipynb
-│   ├── 03_model_zoo_and_submission_v2.ipynb
-│   ├── 03_xgboost_only_and_submission.ipynb
-│   └── notebooks_anotherform
-│       ├── 01_EDA.ipynb
-│       ├── 02_ventas_mensual.ipynb
-│       ├── 03_Feature_Engineering.ipynb
-│       ├── 04_baseline.ipynb
-│       ├── 05_Modelos1_Lightgbm.ipynb
-│       └── 06_Entregable.ipynb
+tarea1_future_sales/
+├── artifacts/
+│   ├── models/
+│   │   └── final_model.joblib
+│   └── logs/                  # (Tarea 03) logs de ejecución
+├── data/
+│   ├── raw/                   # input Kaggle (NO se sube completo si pesa mucho)
+│   ├── prep/                  # features de entrenamiento
+│   ├── inference/             # features para inferencia (incluye ID)
+│   └── predictions/           # submissions generadas
+├── notebooks/                 # notebooks exploratorios (EDA, baseline, etc.)
+├── src/
+│   ├── __init__.py
+│   ├── prep.py
+│   ├── train.py
+│   ├── inference.py
+│   └── utils/
+│       ├── __init__.py
+│       ├── paths.py
+│       └── validation.py
 ├── pyproject.toml
-├── README.md
-├── Reporte Predicción de Demanda en Retail con Machine Learning.docx
-├── Reporte Predicción de Demanda en Retail con Machine Learning.pdf
-├── src
-│   ├── __init__.py
-│   ├── inference.py
-│   ├── prep.py
-│   └── train.py
-├── tree.txt
-└── uv.lock
+├── uv.lock
+└── README.md
 
 
