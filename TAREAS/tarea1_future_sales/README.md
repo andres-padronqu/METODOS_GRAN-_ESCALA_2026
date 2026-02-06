@@ -35,4 +35,19 @@ tarea1_future_sales/
 ├── uv.lock
 └── README.md
 
+---
+
+## Requisitos
+
+- Python 3.11+ (recomendado)
+- `uv` para gestionar el entorno y dependencias
+
+---
+
+## Instalación (setup)
+
+Desde la raíz del repositorio:
+
+```bash
+uv sync
 
