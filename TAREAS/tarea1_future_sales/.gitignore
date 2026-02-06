@@ -58,3 +58,12 @@ artifacts/**/*.gz
 # ------------------------------
 tree.txt
 
+# Jupyter
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# macOS
+.DS_Store
+
+# virtual env
+.venv/
