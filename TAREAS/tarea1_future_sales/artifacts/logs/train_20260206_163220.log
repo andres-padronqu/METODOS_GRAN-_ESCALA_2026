@@ -1,0 +1,14 @@
+2026-02-06 16:32:20,709 - train - INFO - Logger initialized. log_path=artifacts/logs/train_20260206_163220.log
+2026-02-06 16:32:20,710 - train - INFO - Starting train step
+2026-02-06 16:32:20,710 - train - INFO - HAS_LGB=True
+2026-02-06 16:32:20,711 - train - INFO - prepared_features_path=data/prep/features_train.csv.gz
+2026-02-06 16:32:20,711 - train - INFO - model_output_path=artifacts/models/final_model.joblib
+2026-02-06 16:32:20,711 - train - INFO - val_block=33
+2026-02-06 16:32:25,228 - train - INFO - Loaded features rows=10913850 cols=8
+2026-02-06 16:32:25,228 - train - INFO - n_feature_columns=7
+2026-02-06 16:32:25,996 - train - INFO - train_df rows=10675678
+2026-02-06 16:32:25,996 - train - INFO - validation_df rows=238172
+2026-02-06 16:32:26,120 - train - INFO - Training LightGBM...
+2026-02-06 16:33:38,534 - train - INFO - RMSE(val)=0.970578
+2026-02-06 16:33:38,605 - train - INFO - Saved model payload -> artifacts/models/final_model.joblib
+2026-02-06 16:33:38,605 - train - INFO - Finished train step. Duration: 77.90 seconds

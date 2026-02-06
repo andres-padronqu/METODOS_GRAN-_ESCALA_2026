@@ -10,6 +10,7 @@ Inputs:
 
 Output:
 - data/predictions/submission.csv
+- artifacts/logs/inference_YYYYMMDD_HHMMSS.log
 """
 
 from __future__ import annotations
@@ -35,7 +36,7 @@ ID_COLUMN = "ID"
 PRED_COLUMN = "item_cnt_month"
 
 
-def _to_relpath(project_root: Path, path: Path) -> str:
+def to_relpath(project_root: Path, path: Path) -> str:
     """Return a repo-relative path for logging (avoid absolute system paths)."""
     try:
         return str(path.relative_to(project_root))
@@ -44,11 +45,10 @@ def _to_relpath(project_root: Path, path: Path) -> str:
 
 
 def main() -> None:
-    # -------------------------
-    # Timer + project root + logger
-    # -------------------------
     start_time = time.time()
     project_root = get_repo_root(__file__)
+
+    # Logger (tu API: setup_logger(log_dir, script_name))
     log_dir = project_root / "artifacts" / "logs"
     logger = setup_logger(log_dir, "inference")
 
@@ -89,9 +89,9 @@ def main() -> None:
 
     ensure_dir(predictions_output_path.parent)
 
-    logger.info("inference_features_path=%s", _to_relpath(project_root, inference_features_path))
-    logger.info("model_artifact_path=%s", _to_relpath(project_root, model_artifact_path))
-    logger.info("predictions_output_path=%s", _to_relpath(project_root, predictions_output_path))
+    logger.info("inference_features_path=%s", to_relpath(project_root, inference_features_path))
+    logger.info("model_artifact_path=%s", to_relpath(project_root, model_artifact_path))
+    logger.info("predictions_output_path=%s", to_relpath(project_root, predictions_output_path))
 
     try:
         # -------------------------
@@ -108,13 +108,20 @@ def main() -> None:
 
         payload = joblib.load(model_artifact_path)
 
+        if "model" not in payload or "feature_columns" not in payload:
+            raise ValueError("El payload del modelo no tiene llaves esperadas: 'model', 'feature_columns'.")
+
         model = payload["model"]
         feature_columns = payload["feature_columns"]
+
+        require_non_empty(bool(feature_columns), "feature_columns está vacío en el payload del modelo.")
 
         logger.info("Loaded inference rows=%s cols=%s", len(inference_df), len(inference_df.columns))
         logger.info("n_feature_columns=%s", len(feature_columns))
 
+        # -------------------------
         # Validate required columns
+        # -------------------------
         missing_features = [col for col in feature_columns if col not in inference_df.columns]
         if missing_features:
             raise ValueError(f"Faltan columnas para inferencia: {missing_features}")
@@ -141,7 +148,7 @@ def main() -> None:
         )
         submission_df.to_csv(predictions_output_path, index=False)
 
-        logger.info("Saved submission -> %s", _to_relpath(project_root, predictions_output_path))
+        logger.info("Saved submission -> %s", to_relpath(project_root, predictions_output_path))
         print(f"[inference] OK -> {predictions_output_path}")
 
     except Exception:

@@ -1,0 +1,11 @@
+2026-02-06 16:29:46,477 - prep - INFO - Starting prep step
+2026-02-06 16:29:46,477 - prep - INFO - raw_data_dir=data/raw
+2026-02-06 16:29:46,477 - prep - INFO - prepared_data_dir=/Users/andrespadronquintana/Desktop/METODOS_GRAN_ESCALA/TAREAS/tarea1_future_sales/data/prep
+2026-02-06 16:29:46,477 - prep - INFO - inference_data_dir=/Users/andrespadronquintana/Desktop/METODOS_GRAN_ESCALA/TAREAS/tarea1_future_sales/data/inference
+2026-02-06 16:29:47,508 - prep - INFO - Loaded sales_train rows=2935849
+2026-02-06 16:29:47,508 - prep - INFO - Loaded test rows=214200
+2026-02-06 16:29:47,508 - prep - INFO - Loaded items rows=22170
+2026-02-06 16:29:47,508 - prep - INFO - Using lags=[1, 2, 3]
+2026-02-06 16:32:16,072 - prep - INFO - Saved train features -> /Users/andrespadronquintana/Desktop/METODOS_GRAN_ESCALA/TAREAS/tarea1_future_sales/data/prep/features_train.csv.gz (rows=10913850, cols=8)
+2026-02-06 16:32:18,625 - prep - INFO - Saved test features -> /Users/andrespadronquintana/Desktop/METODOS_GRAN_ESCALA/TAREAS/tarea1_future_sales/data/inference/features_test.csv.gz (rows=214200, cols=8)
+2026-02-06 16:32:18,626 - prep - INFO - Finished prep step. Duration: 152.15 seconds
