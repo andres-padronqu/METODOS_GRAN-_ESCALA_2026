@@ -51,6 +51,7 @@ uv sync
 uv run python -m src.prep
 uv run python -m src.train
 uv run python -m src.inference
+```
 
 ## Resultados (Kaggle)
 
@@ -58,6 +59,7 @@ uv run python -m src.inference
 - **Kaggle Public Score (submission):** 1.02880
 - **Kaggle Submissions:** https://www.kaggle.com/competitions/competitive-data-science-predict-future-sales/submissions
 - **Kaggle Leaderboard (public):** https://www.kaggle.com/competitions/competitive-data-science-predict-future-sales/leaderboard?tab=public
+
 
 
 
