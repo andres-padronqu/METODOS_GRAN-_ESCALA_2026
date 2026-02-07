@@ -67,3 +67,8 @@ tree.txt
 
 # virtual env
 .venv/
+
+# ------------------------------
+# Outputs locales (no versionar)
+# ------------------------------
+catboost_info/
