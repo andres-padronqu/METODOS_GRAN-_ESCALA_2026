@@ -41,7 +41,7 @@ tarea1_future_sales/
 
 - Python 3.11+ (recomendado)
 - `uv` para gestionar el entorno y dependencias
-
+```
 ---
 
 ## Quickstart
@@ -53,13 +53,21 @@ uv run python -m src.train
 uv run python -m src.inference
 ```
 
-## Resultados (Kaggle)
+## Resultados 
 
 - **RMSE (validación local, val_block=33):** 0.970578
 - **Kaggle Public Score (submission):** 1.02880
 - **Kaggle Submissions:** https://www.kaggle.com/competitions/competitive-data-science-predict-future-sales/submissions
 - **Kaggle Leaderboard (public):** https://www.kaggle.com/competitions/competitive-data-science-predict-future-sales/leaderboard?tab=public
 
+
+### Linting
+
+#### Ruff
+![Ruff Check](docs/images/ruff_check.png)
+
+#### Pylint
+![Pylint score](docs/images/pylint_score.png)
 
 
 
