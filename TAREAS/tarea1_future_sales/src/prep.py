@@ -35,11 +35,15 @@ def build_monthly_target(sales_df: pd.DataFrame) -> pd.DataFrame:
     date_block_num, shop_id, item_id, item_cnt_month
     """
     monthly_sales_df = (
-        sales_df.groupby(["date_block_num", "shop_id", "item_id"], as_index=False)["item_cnt_day"]
+        sales_df.groupby(["date_block_num", "shop_id", "item_id"], as_index=False)[
+            "item_cnt_day"
+        ]
         .sum()
         .rename(columns={"item_cnt_day": TARGET_COLUMN})
     )
-    monthly_sales_df[TARGET_COLUMN] = monthly_sales_df[TARGET_COLUMN].clip(CLIP_MIN, CLIP_MAX)
+    monthly_sales_df[TARGET_COLUMN] = monthly_sales_df[TARGET_COLUMN].clip(
+        CLIP_MIN, CLIP_MAX
+    )
     return monthly_sales_df
 
 
@@ -75,7 +79,9 @@ def build_monthly_grid(monthly_sales_df: pd.DataFrame) -> pd.DataFrame:
     return full_monthly_df
 
 
-def add_item_category(features_df: pd.DataFrame, items_df: pd.DataFrame) -> pd.DataFrame:
+def add_item_category(
+    features_df: pd.DataFrame, items_df: pd.DataFrame
+) -> pd.DataFrame:
     """Add item_category_id to features if available in items_df."""
     if "item_category_id" not in items_df.columns:
         return features_df
@@ -98,9 +104,13 @@ def add_target_lags(features_df: pd.DataFrame, lag_months: list[int]) -> pd.Data
     lagged_df = features_df.copy()
 
     for lag in lag_months:
-        shifted_df = features_df[["date_block_num", "shop_id", "item_id", TARGET_COLUMN]].copy()
+        shifted_df = features_df[
+            ["date_block_num", "shop_id", "item_id", TARGET_COLUMN]
+        ].copy()
         shifted_df["date_block_num"] = shifted_df["date_block_num"] + lag
-        shifted_df = shifted_df.rename(columns={TARGET_COLUMN: f"{TARGET_COLUMN}_lag_{lag}"})
+        shifted_df = shifted_df.rename(
+            columns={TARGET_COLUMN: f"{TARGET_COLUMN}_lag_{lag}"}
+        )
 
         lagged_df = lagged_df.merge(
             shifted_df,
@@ -227,7 +237,9 @@ def main() -> None:
             train_features_df["date_block_num"] == source_month,
             ["shop_id", "item_id", TARGET_COLUMN],
         ].copy()
-        lag_source_df = lag_source_df.rename(columns={TARGET_COLUMN: f"{TARGET_COLUMN}_lag_{lag}"})
+        lag_source_df = lag_source_df.rename(
+            columns={TARGET_COLUMN: f"{TARGET_COLUMN}_lag_{lag}"}
+        )
 
         test_features_df = test_features_df.merge(
             lag_source_df,

@@ -89,40 +89,60 @@ def main() -> None:
 
     ensure_dir(predictions_output_path.parent)
 
-    logger.info("inference_features_path=%s", to_relpath(project_root, inference_features_path))
+    logger.info(
+        "inference_features_path=%s", to_relpath(project_root, inference_features_path)
+    )
     logger.info("model_artifact_path=%s", to_relpath(project_root, model_artifact_path))
-    logger.info("predictions_output_path=%s", to_relpath(project_root, predictions_output_path))
+    logger.info(
+        "predictions_output_path=%s", to_relpath(project_root, predictions_output_path)
+    )
 
     try:
         # -------------------------
         # Validate inputs
         # -------------------------
-        require_file(inference_features_path, "Corre primero: uv run python -m src.prep")
+        require_file(
+            inference_features_path, "Corre primero: uv run python -m src.prep"
+        )
         require_file(model_artifact_path, "Corre primero: uv run python -m src.train")
 
         # -------------------------
         # Load data + model
         # -------------------------
         inference_df = pd.read_csv(inference_features_path, compression="gzip")
-        require_non_empty(not inference_df.empty, "inference_df está vacío. Revisa features_test.csv.gz.")
+        require_non_empty(
+            not inference_df.empty,
+            "inference_df está vacío. Revisa features_test.csv.gz.",
+        )
 
         payload = joblib.load(model_artifact_path)
 
         if "model" not in payload or "feature_columns" not in payload:
-            raise ValueError("El payload del modelo no tiene llaves esperadas: 'model', 'feature_columns'.")
+            raise ValueError(
+                "El payload del modelo no tiene llaves esperadas: 'model', 'feature_columns'."
+            )
 
         model = payload["model"]
         feature_columns = payload["feature_columns"]
 
-        require_non_empty(bool(feature_columns), "feature_columns está vacío en el payload del modelo.")
+        require_non_empty(
+            bool(feature_columns),
+            "feature_columns está vacío en el payload del modelo.",
+        )
 
-        logger.info("Loaded inference rows=%s cols=%s", len(inference_df), len(inference_df.columns))
+        logger.info(
+            "Loaded inference rows=%s cols=%s",
+            len(inference_df),
+            len(inference_df.columns),
+        )
         logger.info("n_feature_columns=%s", len(feature_columns))
 
         # -------------------------
         # Validate required columns
         # -------------------------
-        missing_features = [col for col in feature_columns if col not in inference_df.columns]
+        missing_features = [
+            col for col in feature_columns if col not in inference_df.columns
+        ]
         if missing_features:
             raise ValueError(f"Faltan columnas para inferencia: {missing_features}")
 
@@ -148,7 +168,9 @@ def main() -> None:
         )
         submission_df.to_csv(predictions_output_path, index=False)
 
-        logger.info("Saved submission -> %s", to_relpath(project_root, predictions_output_path))
+        logger.info(
+            "Saved submission -> %s", to_relpath(project_root, predictions_output_path)
+        )
         print(f"[inference] OK -> {predictions_output_path}")
 
     except Exception:

@@ -105,8 +105,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Train: data/prep/features_train.csv.gz -> artifacts/models/final_model.joblib"
     )
-    parser.add_argument("--prep-path", default="data/prep/features_train.csv.gz", type=str)
-    parser.add_argument("--model-out", default="artifacts/models/final_model.joblib", type=str)
+    parser.add_argument(
+        "--prep-path", default="data/prep/features_train.csv.gz", type=str
+    )
+    parser.add_argument(
+        "--model-out", default="artifacts/models/final_model.joblib", type=str
+    )
     parser.add_argument(
         "--val-block",
         default=33,
@@ -121,7 +125,9 @@ def main() -> None:
 
     logger.info("Starting train step")
     logger.info("HAS_LGB=%s", HAS_LGB)
-    logger.info("prepared_features_path=%s", to_relpath(project_root, prepared_features_path))
+    logger.info(
+        "prepared_features_path=%s", to_relpath(project_root, prepared_features_path)
+    )
     logger.info("model_output_path=%s", to_relpath(project_root, model_output_path))
     logger.info("val_block=%s", args.val_block)
 
@@ -135,23 +141,37 @@ def main() -> None:
         # Load features
         # -------------------------
         features_df = pd.read_csv(prepared_features_path, compression="gzip")
-        require_non_empty(not features_df.empty, "features_df está vacío. Revisa el output de prep.")
+        require_non_empty(
+            not features_df.empty, "features_df está vacío. Revisa el output de prep."
+        )
 
-        logger.info("Loaded features rows=%s cols=%s", len(features_df), len(features_df.columns))
+        logger.info(
+            "Loaded features rows=%s cols=%s",
+            len(features_df),
+            len(features_df.columns),
+        )
 
         if "date_block_num" not in features_df.columns:
-            raise ValueError("Falta columna 'date_block_num' en features. Revisa src.prep.")
+            raise ValueError(
+                "Falta columna 'date_block_num' en features. Revisa src.prep."
+            )
 
         feature_columns = get_feature_columns(features_df)
-        require_non_empty(bool(feature_columns), "No hay columnas de features (lista vacía).")
+        require_non_empty(
+            bool(feature_columns), "No hay columnas de features (lista vacía)."
+        )
 
         logger.info("n_feature_columns=%s", len(feature_columns))
 
         # -------------------------
         # Split train/val by month
         # -------------------------
-        train_df = features_df.loc[features_df["date_block_num"] < args.val_block].copy()
-        validation_df = features_df.loc[features_df["date_block_num"] == args.val_block].copy()
+        train_df = features_df.loc[
+            features_df["date_block_num"] < args.val_block
+        ].copy()
+        validation_df = features_df.loc[
+            features_df["date_block_num"] == args.val_block
+        ].copy()
 
         require_non_empty(
             not train_df.empty,
@@ -199,7 +219,9 @@ def main() -> None:
         # Evaluate
         # -------------------------
         validation_predictions = model.predict(validation_features)
-        rmse_val = float(np.sqrt(mean_squared_error(validation_target, validation_predictions)))
+        rmse_val = float(
+            np.sqrt(mean_squared_error(validation_target, validation_predictions))
+        )
         logger.info("RMSE(val)=%s", f"{rmse_val:.6f}")
 
         # -------------------------
@@ -212,7 +234,9 @@ def main() -> None:
             "rmse_val": rmse_val,
         }
         joblib.dump(payload, model_output_path)
-        logger.info("Saved model payload -> %s", to_relpath(project_root, model_output_path))
+        logger.info(
+            "Saved model payload -> %s", to_relpath(project_root, model_output_path)
+        )
 
         print(f"[train] OK -> {model_output_path}")
         print(f"[train] RMSE(val) = {rmse_val:.6f}")
@@ -227,5 +251,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-

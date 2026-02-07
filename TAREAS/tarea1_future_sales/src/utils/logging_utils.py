@@ -50,7 +50,9 @@ def setup_logger(project_root: Path, script_name: str) -> logging.Logger:
     # Avoid duplicate handlers if re-run in same Python process.
     logger.handlers.clear()
 
-    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setFormatter(formatter)
@@ -65,4 +67,3 @@ def setup_logger(project_root: Path, script_name: str) -> logging.Logger:
 
     logger.info("Logger initialized. log_path=%s", _to_relpath(project_root, log_path))
     return logger
-
