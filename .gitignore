@@ -17,3 +17,12 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
+
+# Local-only / misc
+.python-version
+PROYECTOS/
+README.md
+main.py
+pyproject.toml
+uv.lock
+
