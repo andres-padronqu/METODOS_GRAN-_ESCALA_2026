@@ -9,3 +9,11 @@ __pycache__/
 .venv/
 .pytest_cache/
 
+
+# Python caches
+**/__pycache__/
+**/*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
