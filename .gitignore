@@ -1,0 +1,28 @@
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+
+# Python caches
+**/__pycache__/
+**/*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+
+# Local-only / misc
+.python-version
+PROYECTOS/
+README.md
+main.py
+pyproject.toml
+uv.lock
+
