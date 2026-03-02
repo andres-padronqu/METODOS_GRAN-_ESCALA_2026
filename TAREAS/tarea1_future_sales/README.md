@@ -2,7 +2,7 @@
 
 Este repositorio implementa un pipeline reproducible para el reto **Predict Future Sales** de Kaggle. El objetivo es transformar datos de ventas diarias a un dataset mensual, construir *features* (incluyendo *lags*), entrenar un modelo de regresión y generar un archivo de **submission** con el formato requerido por Kaggle.
 
-El proyecto está estructurado como un paquete de Python (`src/`) con scripts modulares para **preprocesamiento**, **entrenamiento** e **inferencia**, siguiendo buenas prácticas de ingeniería: rutas robustas con `pathlib`, validaciones explícitas, y artefactos versionables mediante un flujo claro.
+El proyecto está estructurado como un paquete de Python (`src/`) con scripts modulares para **preprocesamiento**, **entrenamiento** e **inferencia**, siguiendo buenas prácticas de ingeniería: rutas robustas con `pathlib`, validaciones explícitas, logging estructurado y artefactos versionables mediante un flujo claro.
 
 ---
 
@@ -15,59 +15,135 @@ tarea1_future_sales/
 ├── artifacts/
 │   ├── models/
 │   │   └── final_model.joblib
-│   └── logs/                  # (Tarea 03) logs de ejecución
+│   └── logs/
 ├── data/
-│   ├── raw/                   # input Kaggle (NO se sube completo si pesa mucho)
+│   ├── raw/                   # input Kaggle (no se sube completo si pesa mucho)
 │   ├── prep/                  # features de entrenamiento
 │   ├── inference/             # features para inferencia (incluye ID)
 │   └── predictions/           # submissions generadas
-├── notebooks/                 # notebooks exploratorios (EDA, baseline, etc.)
+├── docs/
+│   └── images/                # evidencias (EC2, docker build, pytest, linting)
 ├── src/
-│   ├── __init__.py
-│   ├── prep.py
-│   ├── train.py
-│   ├── inference.py
+│   ├── preprocessing/
+│   ├── training/
+│   ├── inference/
 │   └── utils/
-│       ├── __init__.py
-│       ├── paths.py
-│       └── validation.py
+├── Dockerfile.preprocess
+├── Dockerfile.training
+├── Dockerfile.inference
+├── pytest.ini
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
-
----
-
-## Requisitos
-
-- Python 3.11+ (recomendado)
-- `uv` para gestionar el entorno y dependencias
 ```
----
 
-## Quickstart
 
-```bash
+## Instalación y setup
+
+### Clonar el repositorio
+```
+git clone <repo_url>
+cd tarea1_future_sales
+```
+### Preparar el ambiente con uv
+```
+uv venv
 uv sync
-uv run python -m src.prep
-uv run python -m src.train
-uv run python -m src.inference
 ```
 
-## Resultados 
+### Quickstart (ejecución local)
+```
+uv sync
+uv run python -m src.preprocessing.prep
+uv run python -m src.training.train --val-block 33
+uv run python -m src.inference.inference
+```
 
-- **RMSE (validación local, val_block=33):** 0.970578
-- **Kaggle Public Score (submission):** 1.02880
-- **Kaggle Submissions:** https://www.kaggle.com/competitions/competitive-data-science-predict-future-sales/submissions
-- **Kaggle Leaderboard (public):** https://www.kaggle.com/competitions/competitive-data-science-predict-future-sales/leaderboard?tab=public
+### Git Workflow
 
+Se utilizó el siguiente flujo de ramas:
 
-### Linting
+- main
 
-#### Ruff
-![Ruff Check](docs/images/ruff_check.png)
+- development
 
-#### Pylint
-![Pylint score](docs/images/pylint_score.png)
+- feature/<feature-name>
 
+Buenas prácticas aplicadas:
 
+desarrollo en ramas feature/*
 
+Pull Requests hacia development
+
+commits con Conventional Commits:
+
+- feat:
+
+- fix:
+
+- refactor:
+
+- test:
+
+- docs:
+
+![Branches Tagged](docs/images/tagged.png)
+
+## Construcción en EC2 (Docker)
+
+### Build de imágenes
+```
+docker build -f Dockerfile.preprocess -t ml-preprocessing:latest .
+docker build -f Dockerfile.training -t ml-training:latest .
+docker build -f Dockerfile.inference -t ml-inference:latest .
+```
+
+### Step 1 — Preprocessing
+```
+docker run --rm \
+  -v "$(pwd)/data:/app/src/data" \
+  -v "$(pwd)/artifacts:/app/src/artifacts" \
+  ml-preprocessing:latest
+```
+
+### Step 2 — Training
+```
+docker run --rm \
+  -v "$(pwd)/data:/app/src/data" \
+  -v "$(pwd)/artifacts:/app/src/artifacts" \
+  ml-training:latest \
+  --val-block 33
+  
+#RMSE(val)=1.006623
+#Saved model payload -> artifacts/models/final_model.joblib
+```
+
+### Step 3 — Inference
+```
+docker run --rm \
+  -v "$(pwd)/data:/app/src/data" \
+  -v "$(pwd)/artifacts:/app/src/artifacts" \
+  ml-inference:latest
+```
+```
+# data/predictions/submission.csv
+```
+![Docker](docs/images/docker.png)
+![Submission](docs/images/submission.png)
+
+## Resultados
+
+- RMSE (validación local, val_block=33): 1.006623
+
+- Modelo final: LightGBM + log1p + clipping
+
+- Artefacto generado: artifacts/models/final_model.joblib
+
+## Pruebas unitarias
+
+```
+uv run pytest src/ -v
+```
+
+Salida esperada: 15 passed
+![Proofs](docs/images/proofs.png)
