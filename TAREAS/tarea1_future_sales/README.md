@@ -188,6 +188,7 @@ sagemaker/
     ├── train.py
     ├── serve.py
     └── predictor.py
+```
 
 
 Estos archivos permiten que SageMaker ejecute correctamente los procesos de training y serving dentro del contenedor.
@@ -239,6 +240,7 @@ payload = {
 ```
 
 Ejemplo de predicción devuelta por el endpoint:
+
 ```
 {'predictions': [0.48299161640458155]}
 ```
