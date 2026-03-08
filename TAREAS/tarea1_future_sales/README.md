@@ -269,7 +269,7 @@ Endpoint activo en SageMaker
 
 Resultado de una predicción desde el notebook
 
-![SageMaker Training Job](docs/images/sagemaker_training.png)
+![SageMaker Training Job](docs/images/sagemaker_train.png)
 
 ![Endpoint en SageMaker](docs/images/endpoint.png)
 
