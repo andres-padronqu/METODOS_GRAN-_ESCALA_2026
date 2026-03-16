@@ -274,3 +274,94 @@ Resultado de una predicción desde el notebook
 ![Endpoint en SageMaker](docs/images/endpoint.png)
 
 ![Ejemplo de predicción](docs/images/sagemaker_pred.png)
+
+----
+# SageMaker Processing Job (Preprocessing BYOC)
+
+Además del entrenamiento y despliegue del modelo, se implementó una etapa adicional del pipeline utilizando **Amazon SageMaker Processing** con un contenedor personalizado (BYOC) para ejecutar el proceso de **preprocesamiento de datos a gran escala**.
+
+Este componente permite ejecutar el pipeline de preparación de datos directamente en infraestructura administrada por SageMaker.
+
+## Flujo de procesamiento
+
+El flujo de ejecución del procesamiento es el siguiente:
+
+```
+S3 input → /opt/ml/processing/input → preprocess.py → /opt/ml/processing/output → S3 output
+```
+
+El contenedor ejecuta el script `preprocess.py`, el cual:
+
+1. Carga el dataset de features desde S3
+2. Construye las particiones de entrenamiento
+3. Genera los conjuntos:
+
+- train.csv
+- validation.csv
+- test.csv
+- submission_features.csv
+
+4. Guarda los resultados en `/opt/ml/processing/output`
+5. SageMaker automáticamente sincroniza estos archivos con **Amazon S3**
+
+---
+
+# Construcción del contenedor de procesamiento
+
+Se creó un contenedor Docker específico para ejecutar el preprocessing dentro de SageMaker.
+
+## Login a Amazon ECR
+
+Autenticación exitosa contra el repositorio de contenedores.
+
+![ECR Login](docs/images/ecr_login.png)
+
+---
+
+
+## Push de la imagen a Amazon ECR
+
+La imagen se etiquetó y se subió al repositorio:
+
+```
+<account-id>.dkr.ecr.us-east-1.amazonaws.com/future-sales-processing:latest
+```
+
+![Docker Push](docs/images/docker_push.png)
+
+---
+
+# Ejecución del SageMaker Processing Job
+
+Una vez subida la imagen a ECR, se lanzó un **SageMaker Processing Job** que ejecuta el script `preprocess.py` dentro del contenedor.
+
+Durante la ejecución se registran logs que muestran:
+
+- carga del dataset
+- construcción de particiones
+- generación de archivos finales
+
+![Processing Logs](docs/images/processing_logs.png)
+
+---
+
+# Archivos generados en S3
+
+El procesamiento generó exitosamente los siguientes datasets:
+
+- `train.csv`
+- `validation.csv`
+- `test.csv`
+- `submission_features.csv`
+
+Estos archivos se almacenan automáticamente en **Amazon S3** en el prefijo de salida del Processing Job.
+
+![S3 Outputs](docs/images/s3_outputs.png)
+
+---
+
+# Validación de los datos generados
+
+Desde el notebook de SageMaker se verificó la existencia de los archivos en S3 y se cargaron previews de los datasets para validar su estructura.
+
+Esto confirma que el **pipeline de preprocessing funciona correctamente en infraestructura SageMaker**.
