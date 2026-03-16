@@ -3,19 +3,15 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# instalar dependencias básicas
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# directorio del programa
 WORKDIR /opt/program
 
-# copiar código del proyecto
 COPY . /opt/program
 
-# instalar dependencias
 RUN pip install --no-cache-dir \
     pandas \
     numpy \
@@ -23,10 +19,11 @@ RUN pip install --no-cache-dir \
     lightgbm \
     flask \
     gunicorn \
-    joblib
+    joblib \
+    sagemaker-training
 
-# puerto que SageMaker usa
 EXPOSE 8080
 
-# entrypoint
-ENTRYPOINT ["python", "sagemaker/code/serve.py"]
+RUN chmod +x /opt/program/sagemaker/code/entrypoint.sh
+
+ENTRYPOINT ["/opt/program/sagemaker/code/entrypoint.sh"]
