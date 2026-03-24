@@ -76,24 +76,27 @@ def save_outputs(
     test_df: pd.DataFrame,
     submission_df: pd.DataFrame,
 ) -> None:
-    """Guarda los cuatro archivos de salida."""
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    """Guarda los archivos de salida en carpetas separadas para SageMaker Pipelines."""
+    train_dir = OUTPUT_DIR / "train"
+    validation_dir = OUTPUT_DIR / "validation"
+    test_dir = OUTPUT_DIR / "test"
 
-    train_path = OUTPUT_DIR / "train.csv"
-    validation_path = OUTPUT_DIR / "validation.csv"
-    test_path = OUTPUT_DIR / "test.csv"
-    submission_path = OUTPUT_DIR / "submission_features.csv"
+    train_dir.mkdir(parents=True, exist_ok=True)
+    validation_dir.mkdir(parents=True, exist_ok=True)
+    test_dir.mkdir(parents=True, exist_ok=True)
+
+    train_path = train_dir / "train.csv"
+    validation_path = validation_dir / "validation.csv"
+    test_path = test_dir / "test.csv"
 
     train_df.to_csv(train_path, index=False)
     validation_df.to_csv(validation_path, index=False)
     test_df.to_csv(test_path, index=False)
-    submission_df.to_csv(submission_path, index=False)
 
     logger.info("Archivos guardados correctamente:")
     logger.info(" - %s", train_path)
     logger.info(" - %s", validation_path)
     logger.info(" - %s", test_path)
-    logger.info(" - %s", submission_path)
 
 
 def main() -> None:
