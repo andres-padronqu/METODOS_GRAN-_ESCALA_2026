@@ -6,6 +6,8 @@ ENV PYTHONUNBUFFERED=1
 RUN pip install --no-cache-dir \
     pandas \
     numpy \
-    scikit-learn
+    scikit-learn \
+    joblib \
+    lightgbm
 
 WORKDIR /opt/ml/processing/code
