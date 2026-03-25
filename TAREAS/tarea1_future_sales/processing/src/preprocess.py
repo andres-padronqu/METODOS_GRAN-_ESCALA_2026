@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 INPUT_DIR = Path("/opt/ml/processing/input")
 OUTPUT_DIR = Path("/opt/ml/processing/output")
+TARGET_COLUMN = "item_cnt_month"
 
 
 def load_data() -> pd.DataFrame:
@@ -27,12 +29,13 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def build_splits(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def build_splits(
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Divide el dataset en train, validation, test y genera submission_features."""
     logger.info("Construyendo particiones")
 
-    # Intenta detectar una variable objetivo común
-    target_candidates = ["item_cnt_month", "target", "label", "y"]
+    target_candidates = [TARGET_COLUMN, "target", "label", "y"]
     target_col = next((col for col in target_candidates if col in df.columns), None)
 
     if target_col:
@@ -40,7 +43,6 @@ def build_splits(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     else:
         logger.info("No se detectó variable objetivo; se usarán todas las columnas como features")
 
-    # Primer split: train 70%, temp 30%
     train_df, temp_df = train_test_split(
         df,
         test_size=0.30,
@@ -48,7 +50,6 @@ def build_splits(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
         shuffle=True,
     )
 
-    # Segundo split: validation 15%, test 15%
     validation_df, test_df = train_test_split(
         temp_df,
         test_size=0.50,
@@ -56,7 +57,6 @@ def build_splits(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
         shuffle=True,
     )
 
-    # submission_features = test sin la variable objetivo, si existe
     if target_col:
         submission_df = test_df.drop(columns=[target_col]).copy()
     else:
@@ -68,6 +68,23 @@ def build_splits(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataF
     logger.info("submission_features shape: %s", submission_df.shape)
 
     return train_df, validation_df, test_df, submission_df
+
+
+def save_batch_jsonl(test_df: pd.DataFrame, output_dir: Path) -> None:
+    """Guarda un archivo JSONL para Batch Transform compatible con serve.py."""
+    batch_dir = output_dir / "batch"
+    batch_dir.mkdir(parents=True, exist_ok=True)
+
+    batch_path = batch_dir / "batch.jsonl"
+
+    feature_df = test_df.drop(columns=[TARGET_COLUMN], errors="ignore")
+
+    with open(batch_path, "w", encoding="utf-8") as f:
+        for _, row in feature_df.iterrows():
+            payload = {"instances": [row.to_dict()]}
+            f.write(json.dumps(payload) + "\n")
+
+    logger.info("Archivo batch transform guardado en: %s", batch_path)
 
 
 def save_outputs(
@@ -85,18 +102,25 @@ def save_outputs(
     validation_dir.mkdir(parents=True, exist_ok=True)
     test_dir.mkdir(parents=True, exist_ok=True)
 
-    train_path = train_dir / "train.csv"
-    validation_path = validation_dir / "validation.csv"
-    test_path = test_dir / "test.csv"
+    # Para compatibilidad con la imagen vieja de training
+    train_df.to_csv(
+        train_dir / "features_train.csv.gz",
+        index=False,
+        compression="gzip",
+    )
 
-    train_df.to_csv(train_path, index=False)
-    validation_df.to_csv(validation_path, index=False)
-    test_df.to_csv(test_path, index=False)
+    # Estos se quedan como CSV para el resto del pipeline
+    validation_df.to_csv(validation_dir / "validation.csv", index=False)
+    test_df.to_csv(test_dir / "test.csv", index=False)
+
+    # Input adicional para Batch Transform en formato JSONL
+    save_batch_jsonl(test_df, OUTPUT_DIR)
 
     logger.info("Archivos guardados correctamente:")
-    logger.info(" - %s", train_path)
-    logger.info(" - %s", validation_path)
-    logger.info(" - %s", test_path)
+    logger.info(" - %s", train_dir / "features_train.csv.gz")
+    logger.info(" - %s", validation_dir / "validation.csv")
+    logger.info(" - %s", test_dir / "test.csv")
+    logger.info(" - %s", OUTPUT_DIR / "batch" / "batch.jsonl")
 
 
 def main() -> None:
