@@ -41,11 +41,9 @@ def load_test_data(test_input: str) -> pd.DataFrame:
 def resolve_model_tar(model_input: str) -> Path:
     base = Path(model_input)
 
-    # Caso 1: SageMaker montó directamente el archivo como /opt/ml/processing/input/model
     if base.is_file():
         return base
 
-    # Caso 2: es carpeta y contiene model.tar.gz
     direct = base / "model.tar.gz"
     if direct.exists():
         return direct
@@ -78,18 +76,30 @@ def load_model(model_input: str):
 
     direct = extracted_dir / "final_model.joblib"
     if direct.exists():
-        print(f"Resolved model path: {direct}")
-        return joblib.load(direct)
+        model_path = direct
+    else:
+        matches = list(extracted_dir.rglob("final_model.joblib"))
+        if not matches:
+            files = list(extracted_dir.rglob("*"))
+            raise FileNotFoundError(
+                f"final_model.joblib not found in extracted artifact. Files available: {files}"
+            )
+        model_path = matches[0]
 
-    matches = list(extracted_dir.rglob("final_model.joblib"))
-    if matches:
-        print(f"Resolved model path: {matches[0]}")
-        return joblib.load(matches[0])
+    print(f"Resolved model path: {model_path}")
+    artifact = joblib.load(model_path)
 
-    files = list(extracted_dir.rglob("*"))
-    raise FileNotFoundError(
-        f"final_model.joblib not found in extracted artifact. Files available: {files}"
-    )
+    if isinstance(artifact, dict):
+        print(f"Loaded artifact keys: {list(artifact.keys())}")
+
+        if "model" not in artifact:
+            raise ValueError(
+                f"Loaded artifact is a dict but does not contain 'model'. Keys: {list(artifact.keys())}"
+            )
+
+        return artifact["model"], artifact
+
+    return artifact, None
 
 
 def main():
@@ -100,7 +110,7 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     print("Loading model...")
-    model = load_model(model_input)
+    model, artifact = load_model(model_input)
 
     print("Loading test data...")
     test_df = load_test_data(test_input)
@@ -113,6 +123,18 @@ def main():
     y_true = test_df[TARGET_COLUMN].values
     x_test = test_df.drop(columns=[TARGET_COLUMN])
 
+    if artifact is not None and "feature_columns" in artifact:
+        feature_columns = artifact["feature_columns"]
+        print(f"Using feature columns from artifact: {feature_columns}")
+
+        missing_cols = [col for col in feature_columns if col not in x_test.columns]
+        if missing_cols:
+            raise ValueError(
+                f"Missing expected feature columns in test data: {missing_cols}"
+            )
+
+        x_test = x_test[feature_columns]
+
     print("Running predictions...")
     y_pred = model.predict(x_test)
 
@@ -123,7 +145,7 @@ def main():
         "regression_metrics": {
             "rmse": {
                 "value": rmse,
-                "standard_deviation": "NaN"
+                "standard_deviation": "NaN",
             }
         }
     }
