@@ -365,3 +365,54 @@ Estos archivos se almacenan automáticamente en **Amazon S3** en el prefijo de s
 Desde el notebook de SageMaker se verificó la existencia de los archivos en S3 y se cargaron previews de los datasets para validar su estructura.
 
 Esto confirma que el **pipeline de preprocessing funciona correctamente en infraestructura SageMaker**.
+
+----
+
+## SageMaker Pipeline Execution
+
+Se ejecutó exitosamente un pipeline de Machine Learning en Amazon SageMaker que integra las etapas de preprocesamiento, entrenamiento, evaluación, registro del modelo y batch inference.
+
+El pipeline completo incluye los siguientes pasos:
+
+- PreprocessStep: transformación y limpieza de datos  
+- TrainStep: entrenamiento del modelo  
+- EvaluateStep: evaluación del desempeño  
+- CheckRMSE: validación del error (condición)  
+- CreateModelStep: creación del modelo en SageMaker  
+- RegisterModelStep: registro en Model Registry  
+- BatchTransformStep: inferencia en batch  
+
+Todos los pasos fueron ejecutados correctamente, alcanzando estado `Succeeded`.
+
+### Pipeline status
+
+![Pipeline Status](docs/images/pipeline_succeeded_console.png)
+
+### Pipeline DAG (workflow)
+
+![Pipeline Graph](docs/images/pipeline_graph.png)
+
+---
+
+## Batch Inference (Predicciones en S3)
+
+Se ejecutó un proceso de inferencia en batch mediante SageMaker, generando predicciones almacenadas en Amazon S3.
+
+El output fue guardado en la ruta: s3://sagemaker-us-east-1-*/future-sales/batch-output/
+
+## Model Registry
+
+El modelo entrenado fue registrado exitosamente en SageMaker Model Registry, permitiendo su versionamiento, gobernanza y despliegue controlado.
+
+![Model Registry](docs/images/model_registry.png)
+
+## Evaluación del modelo
+
+El desempeño del modelo fue evaluado utilizando métricas de regresión. Los resultados se almacenaron en un archivo evaluation.json en S3.
+
+![Pipeline Graph](docs/images/evaluation.png)
+
+
+
+
+

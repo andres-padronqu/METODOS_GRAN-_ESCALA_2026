@@ -17,30 +17,44 @@ def _env_path(name: str, default: str) -> Path:
 def main() -> None:
     model_dir = _env_path("SM_MODEL_DIR", "/opt/ml/model")
     train_channel_dir = _env_path("SM_CHANNEL_TRAIN", "/opt/ml/input/data/train")
+    validation_channel_dir = _env_path(
+        "SM_CHANNEL_VALIDATION",
+        "/opt/ml/input/data/validation",
+    )
 
     project_root = Path.cwd()
 
-    input_features = train_channel_dir / "features_train.csv.gz"
-    if not input_features.exists():
+    train_file = train_channel_dir / "train.csv"
+    validation_file = validation_channel_dir / "validation.csv"
+
+    if not train_file.exists():
+        raise FileNotFoundError(f"Expected training file not found: {train_file}")
+
+    if not validation_file.exists():
         raise FileNotFoundError(
-            f"Expected training file not found: {input_features}"
+            f"Expected validation file not found: {validation_file}"
         )
 
     prep_dir = project_root / "data" / "prep"
     prep_dir.mkdir(parents=True, exist_ok=True)
 
-    local_features = prep_dir / "features_train.csv.gz"
-    shutil.copy2(input_features, local_features)
+    local_train_file = prep_dir / "train.csv"
+    local_validation_file = prep_dir / "validation.csv"
 
-    absolute_prep_path = str(local_features.resolve())
-    absolute_model_path = str((project_root / "artifacts" / "models" / "final_model.joblib").resolve())
+    shutil.copy2(train_file, local_train_file)
+    shutil.copy2(validation_file, local_validation_file)
+
+    absolute_train_path = str(local_train_file.resolve())
+    absolute_model_path = str(
+        (project_root / "artifacts" / "models" / "final_model.joblib").resolve()
+    )
 
     cmd = [
         "python",
         "-m",
         "src.training.train",
         "--prep-path",
-        absolute_prep_path,
+        absolute_train_path,
         "--model-out",
         absolute_model_path,
     ]
