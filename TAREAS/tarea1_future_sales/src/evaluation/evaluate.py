@@ -1,5 +1,6 @@
 import json
 import os
+import tarfile
 from pathlib import Path
 
 import joblib
@@ -20,11 +21,34 @@ def load_test_data(test_dir: str) -> pd.DataFrame:
     return pd.read_csv(test_path)
 
 
+def extract_model_artifact(model_dir: str) -> Path:
+    model_dir_path = Path(model_dir)
+    tar_path = model_dir_path / "model.tar.gz"
+
+    if not tar_path.exists():
+        files = list(model_dir_path.glob("*"))
+        raise FileNotFoundError(
+            f"model.tar.gz not found in {model_dir}. Files available: {files}"
+        )
+
+    extracted_dir = model_dir_path / "extracted"
+    extracted_dir.mkdir(parents=True, exist_ok=True)
+
+    with tarfile.open(tar_path, "r:gz") as tar:
+        tar.extractall(path=extracted_dir)
+
+    return extracted_dir
+
+
 def load_model(model_dir: str):
-    model_path = Path(model_dir) / "final_model.joblib"
+    extracted_dir = extract_model_artifact(model_dir)
+    model_path = extracted_dir / "final_model.joblib"
 
     if not model_path.exists():
-        raise FileNotFoundError(f"Model not found: {model_path}")
+        files = list(extracted_dir.glob("*"))
+        raise FileNotFoundError(
+            f"final_model.joblib not found in extracted artifact. Files available: {files}"
+        )
 
     return joblib.load(model_path)
 
@@ -46,13 +70,12 @@ def main():
         raise ValueError(f"Target column '{TARGET_COLUMN}' not found")
 
     y_true = test_df[TARGET_COLUMN].values
-    X_test = test_df.drop(columns=[TARGET_COLUMN])
+    x_test = test_df.drop(columns=[TARGET_COLUMN])
 
     print("Running predictions...")
-    y_pred = model.predict(X_test)
+    y_pred = model.predict(x_test)
 
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
-
     print(f"RMSE: {rmse}")
 
     evaluation = {
@@ -65,8 +88,7 @@ def main():
     }
 
     output_path = Path(output_dir) / "evaluation.json"
-
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         json.dump(evaluation, f)
 
     print(f"Saved evaluation to {output_path}")
