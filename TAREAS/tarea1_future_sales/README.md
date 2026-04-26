@@ -69,7 +69,7 @@ La solución se diseñó como un producto de datos desplegado en AWS, separando 
 
 ## 3. Modelo de datos (RDS)
 
-![ERD](diagrams/erd.png)
+![ERD](diagrams/ERD.png)
 
 La base de datos relacional en RDS se diseñó para soportar la capa operacional del producto.
 
