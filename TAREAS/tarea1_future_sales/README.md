@@ -239,7 +239,7 @@ El enfoque permite pasar de modelos aislados a soluciones consumibles que genera
 
 
 ----------------------------------------------------------------------------
-# Predict Future Sales (Kaggle) — Production-Ready ML Pipeline
+# ANTES: Predict Future Sales (Kaggle) — Production-Ready ML Pipeline
 
 Este repositorio implementa un pipeline reproducible para el reto **Predict Future Sales** de Kaggle. El objetivo es transformar datos de ventas diarias a un dataset mensual, construir *features* (incluyendo *lags*), entrenar un modelo de regresión y generar un archivo de **submission** con el formato requerido por Kaggle.
 
