@@ -107,24 +107,126 @@ La base de datos relacional en RDS se diseñó para soportar la capa operacional
 
 ---
 
+## 4. Aplicación
+
+Se desarrolló una aplicación interactiva utilizando **Streamlit**, desplegada sobre AWS, que permite a usuarios de negocio consumir el producto de datos sin necesidad de conocimientos técnicos.
+
+La aplicación está diseñada para cubrir los principales casos de uso del negocio: consulta, monitoreo, generación de pronósticos y retroalimentación.
+
+---
+
+### Home
+
+![Home](docs/images/app/home.png)
+
+Pantalla principal donde se presenta el producto, su propósito y las funcionalidades disponibles.
+
+---
+
+### Dashboard ejecutivo
+
+![Dashboard](docs/images/app/dashboard.png)
+
+Vista agregada del desempeño del modelo, incluyendo:
+
+- Comparación entre ventas reales y pronóstico
+- Benchmark contra baseline naive
+- Métricas clave (RMSE)
+- Evolución temporal de las predicciones
+
+Esta vista está orientada a perfiles directivos.
+
+---
+
+### Inferencia individual
+
+![Inferencia](docs/images/app/inferencia.png)
+
+Permite consultar predicciones a nivel granular:
+
+- Selección por tienda
+- Selección por producto
+- Visualización de pronóstico más reciente
+- Comparación contra valores reales
+
+Esta vista permite análisis operativo detallado.
+
+---
+
+### Generación batch
+
+![Batch](docs/images/app/batch.png)
+
+Permite ejecutar procesos de predicción masiva:
+
+- Por tienda
+- Por categoría
+- Catálogo completo
+
+Ideal para procesos de planeación y generación de reportes.
+
+---
+
+### KPIs del modelo
+
+![KPIs](docs/images/app/kpis.png)
+
+Muestra métricas clave del modelo:
+
+- RMSE
+- MAE
+- RMSE baseline naive
+- Mejora porcentual
+
+Incluye desglose por categoría para identificar áreas de mejora.
+
+---
+
+### Captura de feedback
+
+![Feedback](docs/images/app/feedback.png)
+
+Permite a usuarios de negocio capturar observaciones sobre las predicciones:
+
+- Tipo de problema
+- Comentarios
+- Usuario
+
+El feedback se almacena en RDS y puede utilizarse para mejorar el modelo.
+
+---
+
+### Productos problema
+
+![Productos Problema](docs/images/app/productos_problema.png)
+
+Listado de productos identificados como problemáticos:
+
+- Filtrado por estatus
+- Visualización de comentarios del negocio
+
+Facilita la priorización de mejoras del modelo.
 
 
+## 5. Conclusiones
 
+Este proyecto demuestra cómo construir un producto de datos end-to-end que integra:
 
+- Ingeniería de datos
+- Machine Learning
+- Infraestructura en la nube
+- Interfaces para usuarios de negocio
 
+El enfoque permite pasar de modelos aislados a soluciones consumibles que generan valor directo para la organización.
 
+---
 
+## 6. Trabajo futuro
 
-
-
-
-
-
-
-
-
-
-
+- Despliegue en producción con ECS + Load Balancer
+- Automatización de pipelines (CI/CD)
+- Entrenamiento continuo del modelo
+- Incorporación de features externas (promociones, calendario, etc.)
 
 
 
