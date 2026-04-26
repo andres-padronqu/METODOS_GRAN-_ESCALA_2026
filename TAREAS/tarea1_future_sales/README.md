@@ -169,7 +169,7 @@ Ideal para procesos de planeación y generación de reportes.
 
 ### KPIs del modelo
 
-![KPIs](docs/images/app/kpis.png)
+![KPIs](docs/images/app/KPIS.png)
 
 Muestra métricas clave del modelo:
 
