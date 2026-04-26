@@ -208,26 +208,95 @@ Listado de productos identificados como problemáticos:
 Facilita la priorización de mejoras del modelo.
 
 
-## 5. Conclusiones
+## 5. Despliegue en AWS (ECS + ECR)
 
-Este proyecto demuestra cómo construir un producto de datos end-to-end que integra:
-
-- Ingeniería de datos
-- Machine Learning
-- Infraestructura en la nube
-- Interfaces para usuarios de negocio
-
-El enfoque permite pasar de modelos aislados a soluciones consumibles que generan valor directo para la organización.
+Para llevar el producto a un entorno accesible para usuarios de negocio, la aplicación fue contenerizada con Docker y desplegada en AWS utilizando ECS con Fargate.
 
 ---
 
-## 6. Trabajo futuro
+### Cluster en ECS
 
-- Despliegue en producción con ECS + Load Balancer
-- Automatización de pipelines (CI/CD)
-- Entrenamiento continuo del modelo
-- Incorporación de features externas (promociones, calendario, etc.)
+Se creó un cluster en Amazon ECS llamado `streamlit-cluster`, donde se ejecuta el servicio de la aplicación.
 
+![ECS Cluster](docs/images/app/ECS_cluster.png)
+
+---
+
+### Servicio desplegado
+
+Dentro del cluster se desplegó el servicio `streamlit-service`, el cual mantiene una tarea activa corriendo de forma continua.
+
+![ECS Tasks](docs/images/app/ECS_tasks.png)
+
+---
+
+### Configuración de red
+
+El contenedor se ejecuta con IP pública, permitiendo el acceso directo vía navegador al puerto `8501`.
+
+![ECS Networking](docs/images/app/ECS_networking.png)
+
+---
+
+### Logs del contenedor
+
+Los logs del contenedor pueden visualizarse directamente desde ECS o integrarse con CloudWatch para monitoreo.
+
+![ECS Logs](docs/images/app/ECS_logs.png)
+
+---
+
+### Registro de imágenes en ECR
+
+La imagen Docker de la aplicación fue construida y subida a Amazon ECR, permitiendo su despliegue en ECS.
+
+![ECR Images](docs/images/app/ECR_image.png)
+
+---
+
+### Aplicación desplegada
+
+La aplicación de Streamlit es accesible mediante la IP pública del contenedor.
+
+---
+
+#### Página principal
+
+![App Home](docs/images/app/ECS_home.png)
+
+---
+
+#### Dashboard ejecutivo
+
+![Dashboard](docs/images/app/ECS_dashboard.png)
+
+---
+
+#### Inferencia individual
+
+![Inferencia](docs/images/app/ECS_inferencia.png)
+
+---
+
+#### KPIs del modelo
+
+![KPIs](docs/images/app/ECS_KPIS.png)
+
+---
+
+#### Captura de feedback
+
+![Feedback](docs/images/app/ECS_feedback.png)
+
+---
+
+#### Productos problema
+
+![Productos Problema](docs/images/app/ECR_productosproblema.png)
+
+---
+
+Este despliegue permite servir el producto de datos en la nube de manera reproducible, escalable y accesible para usuarios finales.
 
 
 
