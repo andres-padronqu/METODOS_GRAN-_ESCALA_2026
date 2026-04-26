@@ -1,0 +1,11 @@
+data/
+artifacts/
+notebooks/
+docs/
+.git/
+.ipynb_checkpoints/
+*.ipynb
+*.csv
+*.gz
+*.tar.gz
+
