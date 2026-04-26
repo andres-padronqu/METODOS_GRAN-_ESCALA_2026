@@ -1,3 +1,142 @@
+# Producto de Datos de Pronóstico de Ventas
+
+## 1. Problema de negocio
+
+El objetivo de este proyecto es construir un **producto de datos** que permita a las áreas de planeación, finanzas, BI y dirección acceder a pronósticos de ventas de manera sencilla, rápida y sin depender de notebooks o equipos técnicos.
+
+Actualmente, el proceso de generación de pronósticos es manual, lo que limita la capacidad de reacción ante cambios en la demanda. Este proyecto propone una solución basada en la nube que habilita:
+
+- Acceso vía interfaz web
+- Consultas rápidas sobre datos históricos y predicciones
+- Generación de pronósticos a nivel individual y batch
+- Captura de feedback del negocio
+
+---
+
+## 2. Arquitectura de la solución
+
+![Arquitectura](diagrams/arquitectura.png)
+
+La solución se diseñó como un producto de datos desplegado en AWS, separando claramente las capas de aplicación, datos y machine learning.
+
+### Componentes principales:
+
+- **Amazon ECS (Fargate)**  
+  Despliegue de la aplicación de Streamlit como interfaz web accesible vía URL pública.
+
+- **Amazon ECR**  
+  Repositorio de imágenes Docker utilizadas para contenerizar la aplicación.
+
+- **Amazon S3**  
+  Data lake donde se almacenan los datos analíticos, incluyendo:
+  - datos históricos
+  - predicciones
+  - métricas de evaluación
+
+- **AWS Glue Data Catalog**  
+  Catálogo de metadatos que permite estructurar los datos almacenados en S3.
+
+- **Amazon Athena**  
+  Motor de consultas SQL utilizado por la aplicación para acceder a los datos en S3.
+
+- **Amazon SageMaker**  
+  Utilizado para el entrenamiento y generación de predicciones de forma offline (batch).
+
+- **Amazon RDS (PostgreSQL)**  
+  Base de datos operacional donde se almacenan:
+  - feedback del negocio
+  - metadatos
+  - usuarios
+  - logs de uso
+
+- **AWS Secrets Manager**  
+  Gestión segura de credenciales para acceder a la base de datos.
+
+- **AWS CloudFormation**  
+  Despliegue de la infraestructura como código (IaC), asegurando reproducibilidad.
+
+### Flujo general
+
+1. Los modelos generan predicciones en SageMaker
+2. Las predicciones se almacenan en S3
+3. Glue cataloga los datos
+4. Athena permite consultas SQL sobre esos datos
+5. La aplicación en ECS consume los datos vía Athena
+6. Los usuarios interactúan con la app vía navegador
+7. El feedback se almacena en RDS
+
+---
+
+## 3. Modelo de datos (RDS)
+
+![ERD](diagrams/erd.png)
+
+La base de datos relacional en RDS se diseñó para soportar la capa operacional del producto.
+
+### Tablas principales
+
+- **categories**
+  - Catálogo de categorías de productos
+
+- **items**
+  - Información de productos
+  - Relación con categorías
+
+- **shops**
+  - Información de tiendas
+
+- **forecasts**
+  - Predicciones generadas por los modelos
+  - Nivel producto-tienda-mes
+
+- **model_metrics**
+  - Métricas de evaluación del modelo
+  - Comparación contra baseline naive
+
+- **business_feedback**
+  - Comentarios del negocio sobre predicciones
+  - Identificación de problemas
+
+### Relaciones
+
+- Un `item` pertenece a una `category`
+- Un `item` puede tener múltiples `forecasts`
+- Un `shop` puede tener múltiples `forecasts`
+- Las métricas se calculan por combinación de item, shop y categoría
+- El feedback del negocio se vincula a productos, tiendas y categorías
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+----------------------------------------------------------------------------
 # Predict Future Sales (Kaggle) — Production-Ready ML Pipeline
 
 Este repositorio implementa un pipeline reproducible para el reto **Predict Future Sales** de Kaggle. El objetivo es transformar datos de ventas diarias a un dataset mensual, construir *features* (incluyendo *lags*), entrenar un modelo de regresión y generar un archivo de **submission** con el formato requerido por Kaggle.
