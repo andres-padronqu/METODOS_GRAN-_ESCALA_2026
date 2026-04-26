@@ -1,5 +1,7 @@
 # Producto de Datos de Pronóstico de Ventas
 
+## Proyecto realizado por Andrés Padrón y Manuel De la Tejera
+
 ## 1. Problema de negocio
 
 El objetivo de este proyecto es construir un **producto de datos** que permita a las áreas de planeación, finanzas, BI y dirección acceder a pronósticos de ventas de manera sencilla, rápida y sin depender de notebooks o equipos técnicos.
