@@ -212,104 +212,119 @@ Listado de productos identificados como problemáticos:
 Facilita la priorización de mejoras del modelo.
 
 
-## 5. Despliegue en AWS (ECS + ECR)
+## 5. Despliegue en AWS (ECS + ECR + LightGBM)
 
 Para llevar el producto a un entorno accesible para usuarios de negocio, la aplicación fue contenerizada con Docker y desplegada en AWS utilizando ECS con Fargate.
 
-### URL pública de la aplicación
+El componente central del producto de datos es un modelo de **LightGBM**, diseñado para predecir ventas mensuales a nivel producto–tienda.
 
-La aplicación de Streamlit se encuentra desplegada en AWS ECS (Fargate) y es accesible mediante la siguiente URL pública:
-
- http://44.202.100.192:8501
-
-Esto permite que cualquier usuario con acceso a internet pueda interactuar con el producto de datos sin necesidad de ejecutar código localmente.
+Este modelo permite capturar relaciones no lineales y patrones complejos en los datos, superando significativamente a un baseline naive.
 
 ---
 
-### Cluster en ECS
+### Características del modelo
 
-Se creó un cluster en Amazon ECS llamado `streamlit-cluster`, donde se ejecuta el servicio de la aplicación.
+El modelo se entrena utilizando:
 
-![ECS Cluster](docs/images/app/ECS_cluster.png)
+- Variables históricas de ventas  
+- Features con rezagos (*lags*)  
+- Variables agregadas por tienda y producto  
+- Componentes de estacionalidad  
 
----
-
-### Servicio desplegado
-
-Dentro del cluster se desplegó el servicio `streamlit-service`, el cual mantiene una tarea activa corriendo de forma continua.
-
-![ECS Tasks](docs/images/app/ECS_tasks.png)
+Esto permite capturar dinámicas temporales relevantes en el comportamiento de la demanda.
 
 ---
 
-### Configuración de red
+### Pipeline de modelado
 
-El contenedor se ejecuta con IP pública, permitiendo el acceso directo vía navegador al puerto `8501`.
+El flujo de modelado sigue tres etapas principales:
 
-![ECS Networking](docs/images/app/ECS_networking.png)
+1. **Preprocessing**
+   - Limpieza de datos  
+   - Generación de features  
+   - Construcción de variables lag  
 
----
+2. **Training**
+   - Entrenamiento del modelo LightGBM  
+   - Validación temporal  
+   - Evaluación con RMSE y MAE  
 
-### Logs del contenedor
-
-Los logs del contenedor pueden visualizarse directamente desde ECS o integrarse con CloudWatch para monitoreo.
-
-![ECS Logs](docs/images/app/ECS_logs.png)
-
----
-
-### Registro de imágenes en ECR
-
-La imagen Docker de la aplicación fue construida y subida a Amazon ECR, permitiendo su despliegue en ECS.
-
-![ECR Images](docs/images/app/ECR_image.png)
+3. **Inference**
+   - Generación de predicciones  
+   - Construcción de dataset final  
+   - Almacenamiento en S3  
 
 ---
 
-### Aplicación desplegada
+### Evaluación del modelo
 
-La aplicación de Streamlit es accesible mediante la IP pública del contenedor.
+El modelo se compara contra un baseline naive:
+
+- RMSE modelo: 0.78  
+- RMSE naive: 1.08  
+- Mejora: 27.7%  
+
+Esto confirma que el modelo captura patrones relevantes y genera valor para el negocio.
 
 ---
 
-#### Página principal
+### Integración en la arquitectura
 
-![App Home](docs/images/app/ECS_home.png)
+El modelo está completamente integrado en el producto:
+
+- Predicciones almacenadas en **S3**  
+- Consultas mediante **Athena**  
+- Visualización en **Streamlit (ECS)**  
+- Feedback almacenado en **RDS**  
+
+Esto permite cerrar el ciclo de mejora continua:
+
+**Predicción → Consumo → Feedback → Iteración**
 
 ---
+
+### Visualización en producción
+
+A continuación se muestran las principales vistas del modelo ya desplegado:
+
+---
+
+IP Pública: http://54.221.9.247:8501/
 
 #### Dashboard ejecutivo
 
-![Dashboard](docs/images/app/ECS_dashboard.png)
+![Dashboard](docs/images/app/ECS_dashboard_light.png)
 
 ---
 
 #### Inferencia individual
 
-![Inferencia](docs/images/app/ECS_inferencia.png)
+![Inferencia](docs/images/app/ECS_inf_lightgbm.png)
+
+---
+
+#### Generación batch
+
+![Batch](docs/images/app/ECS_batch_lightgbm.png)
 
 ---
 
 #### KPIs del modelo
 
-![KPIs](docs/images/app/ECS_KPIS.png)
+![KPIs](docs/images/app/ECS_KPIS_lightgbm.png)
 
 ---
 
 #### Captura de feedback
 
-![Feedback](docs/images/app/ECS_feedback.png)
+![Feedback](docs/images/app/ECS_feedback_lightgbm.png)
 
 ---
 
-#### Productos problema
+#### Productos marcados para revisión
 
-![Productos Problema](docs/images/app/ECR_productosproblema.png)
+![Productos Problema](docs/images/app/ECS_prod_lightgbm.png)
 
 ---
 
-Este despliegue permite servir el producto de datos en la nube de manera reproducible, escalable y accesible para usuarios finales.
-
-
-
-
+Este enfoque convierte al modelo en un componente productivo dentro de un sistema de negocio, permitiendo su uso continuo, monitoreo y mejora basada en retroalimentación real.
