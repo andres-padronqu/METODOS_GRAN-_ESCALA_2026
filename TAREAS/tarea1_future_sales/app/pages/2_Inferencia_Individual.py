@@ -3,13 +3,13 @@ from __future__ import annotations
 import plotly.express as px
 import streamlit as st
 
-from app.utils.mock_data import load_mock_forecasts
+from app.utils.real_data import load_lightgbm_forecasts
 
 st.set_page_config(page_title="Inferencia individual", layout="wide")
 
 st.title("Inferencia individual")
 
-df = load_mock_forecasts()
+df = load_lightgbm_forecasts()
 
 shop = st.selectbox("Selecciona tienda", sorted(df["shop_name"].unique()))
 item = st.selectbox(
@@ -24,7 +24,7 @@ latest = filtered.sort_values("month").iloc[-1]
 col1, col2, col3 = st.columns(3)
 col1.metric("Tienda", shop)
 col2.metric("Producto", item)
-col3.metric("Pronóstico último mes", f"{latest['prediction']:.2f}")
+col3.metric("Pronóstico LightGBM último mes", f"{latest['prediction']:.2f}")
 
 fig = px.line(
     filtered,

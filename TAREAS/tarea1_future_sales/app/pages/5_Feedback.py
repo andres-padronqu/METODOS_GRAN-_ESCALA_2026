@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import streamlit as st
 
-from app.utils.mock_data import load_mock_forecasts
+from app.utils.real_data import load_lightgbm_forecasts
 
 st.set_page_config(page_title="Feedback", layout="wide")
 
 st.title("Captura de feedback del negocio")
 
-df = load_mock_forecasts()
+df = load_lightgbm_forecasts()
 
 with st.form("feedback_form"):
     shop = st.selectbox("Tienda", sorted(df["shop_name"].unique()))
-    item = st.selectbox("Producto", sorted(df["item_name"].unique()))
+    item = st.selectbox(
+        "Producto",
+        sorted(df.loc[df["shop_name"] == shop, "item_name"].unique()),
+    )
     issue_type = st.selectbox(
         "Tipo de problema",
         [
@@ -31,7 +34,7 @@ with st.form("feedback_form"):
 
 if submitted:
     st.success(
-        "Feedback capturado correctamente. En la versión desplegada se almacenará en RDS."
+        "Feedback capturado correctamente. En la versión productiva se almacenará en RDS."
     )
     st.json(
         {

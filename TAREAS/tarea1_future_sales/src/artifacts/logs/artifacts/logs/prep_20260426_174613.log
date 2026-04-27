@@ -1,0 +1,5 @@
+2026-04-26 17:46:13,260 - prep - INFO - Logger initialized. log_path=artifacts/logs/prep_20260426_174613.log
+2026-04-26 17:46:13,260 - prep - INFO - Starting prep step
+2026-04-26 17:46:13,260 - prep - INFO - raw_data_dir=data/raw
+2026-04-26 17:46:13,260 - prep - INFO - prepared_data_dir=/Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/prep
+2026-04-26 17:46:13,260 - prep - INFO - inference_data_dir=/Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/inference

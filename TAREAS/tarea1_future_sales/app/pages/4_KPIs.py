@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import numpy as np
-import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from app.utils.mock_data import load_mock_forecasts
+from app.utils.real_data import load_lightgbm_forecasts
 
 st.set_page_config(page_title="KPIs", layout="wide")
 
 st.title("KPIs del modelo")
 
-df = load_mock_forecasts()
+df = load_lightgbm_forecasts()
 
 df = df.assign(
     error=df["actual"] - df["prediction"],
@@ -24,7 +23,6 @@ df = df.assign(
 rmse = np.sqrt(df["squared_error"].mean())
 mae = df["abs_error"].mean()
 naive_rmse = np.sqrt(df["naive_squared_error"].mean())
-naive_mae = df["naive_abs_error"].mean()
 improvement = (naive_rmse - rmse) / naive_rmse
 
 col1, col2, col3, col4 = st.columns(4)
@@ -32,6 +30,10 @@ col1.metric("RMSE modelo", f"{rmse:.2f}")
 col2.metric("MAE modelo", f"{mae:.2f}")
 col3.metric("RMSE naive", f"{naive_rmse:.2f}")
 col4.metric("Mejora vs naive", f"{improvement:.1%}")
+
+st.caption(
+    "Las métricas se calculan con datos de validación histórica y predicciones LightGBM."
+)
 
 st.divider()
 
