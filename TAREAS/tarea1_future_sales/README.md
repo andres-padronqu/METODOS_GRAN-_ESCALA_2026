@@ -115,6 +115,8 @@ Se desarrolló una aplicación interactiva utilizando **Streamlit**, desplegada 
 
 La aplicación está diseñada para cubrir los principales casos de uso del negocio: consulta, monitoreo, generación de pronósticos y retroalimentación.
 
+Las predicciones mostradas en la aplicación provienen de un modelo LightGBM entrenado sobre features con lags, ejecutado mediante un pipeline reproducible de preprocessing, training e inference.
+
 ---
 
 ### Home
@@ -213,6 +215,14 @@ Facilita la priorización de mejoras del modelo.
 ## 5. Despliegue en AWS (ECS + ECR)
 
 Para llevar el producto a un entorno accesible para usuarios de negocio, la aplicación fue contenerizada con Docker y desplegada en AWS utilizando ECS con Fargate.
+
+### URL pública de la aplicación
+
+La aplicación de Streamlit se encuentra desplegada en AWS ECS (Fargate) y es accesible mediante la siguiente URL pública:
+
+ http://44.202.100.192:8501
+
+Esto permite que cualquier usuario con acceso a internet pueda interactuar con el producto de datos sin necesidad de ejecutar código localmente.
 
 ---
 
