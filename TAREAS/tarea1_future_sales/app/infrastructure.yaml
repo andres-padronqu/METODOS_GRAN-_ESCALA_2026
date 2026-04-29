@@ -1,0 +1,521 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Parcial — Producto de Datos de Pronostico de Ventas (1C Company).
+  Stack unico: VPC, Security Groups, IAM, ECR, Secrets Manager,
+  RDS PostgreSQL, ECS Fargate (Streamlit) y CloudWatch Logs.
+  Equipo: Andres Padron y Manuel De la Tejera.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PARAMETERS
+# ─────────────────────────────────────────────────────────────────────────────
+Parameters:
+
+  ProjectName:
+    Type: String
+    Default: forecast-poc
+    Description: Prefijo usado para nombrar y taggear todos los recursos.
+
+  DBUsername:
+    Type: String
+    Default: pocadmin
+    Description: Usuario master de la instancia RDS.
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Password master de RDS. Mínimo 8 caracteres. Se almacena en Secrets Manager.
+
+  DBName:
+    Type: String
+    Default: forecastdb
+    Description: Nombre de la base de datos PostgreSQL.
+
+  ContainerImage:
+    Type: String
+    Description: >
+      URI completo de la imagen en ECR, incluyendo tag. Ejemplo:
+      123456789012.dkr.ecr.us-east-1.amazonaws.com/forecast-poc:latest
+      Obtener el URI desde el Output ECRRepositoryURI después del primer deploy sin este parámetro,
+      hacer docker push, y luego actualizar el stack con este valor.
+
+  ContainerPort:
+    Type: Number
+    Default: 8501
+    Description: Puerto que expone el contenedor de Streamlit.
+
+  TaskCpu:
+    Type: String
+    Default: '256'
+    AllowedValues: ['256', '512', '1024', '2048']
+    Description: CPU units para la tarea Fargate. 256 = 0.25 vCPU.
+
+  TaskMemory:
+    Type: String
+    Default: '512'
+    AllowedValues: ['512', '1024', '2048', '4096']
+    Description: Memoria en MB para la tarea Fargate.
+
+  LogRetentionDays:
+    Type: Number
+    Default: 7
+    AllowedValues: [1, 3, 5, 7, 14, 30]
+    Description: Días de retención de logs en CloudWatch.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RESOURCES
+# ─────────────────────────────────────────────────────────────────────────────
+Resources:
+
+  # ---------------------------------------------------------------------------
+  # 1. VPC y red
+  # ---------------------------------------------------------------------------
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-vpc'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-igw'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Dos subnets públicas en AZs distintas — requerido por RDS y recomendado para ECS.
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: us-east-1a
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-subnet-public-a'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  PublicSubnetB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: us-east-1b
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-subnet-public-b'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-rt-public'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  SubnetARouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  SubnetBRouteAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  # ---------------------------------------------------------------------------
+  # 2. Security Groups
+  # ---------------------------------------------------------------------------
+  # ECS acepta tráfico entrante en el puerto de Streamlit desde cualquier IP.
+  # RDS solo acepta conexiones desde el SG de ECS (principio de mínimo acceso).
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso publico al contenedor Streamlit
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref ContainerPort
+          ToPort: !Ref ContainerPort
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-sg-ecs'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso a RDS exclusivamente desde el SG de ECS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-sg-rds'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ---------------------------------------------------------------------------
+  # 3. IAM roles
+  # ---------------------------------------------------------------------------
+  # ECSTaskExecutionRole — usado por ECS para arrancar la tarea:
+  #   pull de imagen desde ECR, escritura de logs en CloudWatch,
+  #   y lectura de secretos desde Secrets Manager.
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-ecs-execution-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsManagerReadForExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref DBSecret
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ECSTaskRole — usado por el código de la app dentro del contenedor:
+  #   lectura de datos en S3, queries en Athena, metadatos en Glue,
+  #   y lectura de credenciales desde Secrets Manager en runtime.
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-ecs-task-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3DataAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${ProjectName}-*'
+                  - !Sub 'arn:aws:s3:::${ProjectName}-*/*'
+        - PolicyName: AthenaAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - athena:StartQueryExecution
+                  - athena:GetQueryExecution
+                  - athena:GetQueryResults
+                  - athena:StopQueryExecution
+                  - athena:ListQueryExecutions
+                Resource: '*'
+        - PolicyName: GlueCatalogAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - glue:GetTable
+                  - glue:GetTables
+                  - glue:GetDatabase
+                  - glue:GetDatabases
+                  - glue:GetPartition
+                  - glue:GetPartitions
+                Resource: '*'
+        - PolicyName: SecretsManagerReadForApp
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Ref DBSecret
+        - PolicyName: CloudWatchLogsWrite
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: '*'
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ---------------------------------------------------------------------------
+  # 4. Secrets Manager
+  # ---------------------------------------------------------------------------
+  # Almacena las credenciales de RDS. El contenedor las obtiene en runtime
+  # llamando a secretsmanager:GetSecretValue con el nombre del secreto,
+  # que se pasa como variable de entorno SECRET_NAME.
+  # Las credenciales nunca aparecen en código fuente ni en variables de entorno
+  # en texto claro.
+  DBSecret:
+    Type: AWS::SecretsManager::Secret
+    DependsOn: RDSInstance
+    Properties:
+      Name: !Sub '${ProjectName}/rds/credentials'
+      Description: Credenciales de conexion a RDS PostgreSQL para la app Streamlit
+      SecretString: !Sub |
+        {
+          "username": "${DBUsername}",
+          "password": "${DBPassword}",
+          "host": "${RDSInstance.Endpoint.Address}",
+          "port": "5432",
+          "dbname": "${DBName}"
+        }
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ---------------------------------------------------------------------------
+  # 5. RDS PostgreSQL
+  # ---------------------------------------------------------------------------
+  # Capa operacional del producto: feedback del negocio, catálogos,
+  # métricas del modelo y logs de uso. db.t3.micro es suficiente para
+  # el volumen de operaciones transaccionales del MVP.
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group para RDS del POC de pronosticos
+      SubnetIds:
+        - !Ref PublicSubnetA
+        - !Ref PublicSubnetB
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-db-subnet-group'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub '${ProjectName}-db'
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: '15.4'
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBName: !Ref DBName
+      AllocatedStorage: '20'
+      StorageType: gp2
+      PubliclyAccessible: false
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      BackupRetentionPeriod: 1
+      DeletionProtection: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-rds'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ---------------------------------------------------------------------------
+  # 6. ECR
+  # ---------------------------------------------------------------------------
+  # Repositorio privado para la imagen Docker de la app Streamlit.
+  # Workflow: docker build → docker tag → docker push → deploy ECS.
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub '${ProjectName}'
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ---------------------------------------------------------------------------
+  # 7. CloudWatch Log Group
+  # ---------------------------------------------------------------------------
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/ecs/${ProjectName}'
+      RetentionInDays: !Ref LogRetentionDays
+
+  # ---------------------------------------------------------------------------
+  # 8. ECS Cluster
+  # ---------------------------------------------------------------------------
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub '${ProjectName}-cluster'
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  # ---------------------------------------------------------------------------
+  # 9. ECS Task Definition
+  # ---------------------------------------------------------------------------
+  # Define el contenedor de Streamlit: imagen, CPU, memoria, puerto,
+  # variables de entorno y configuración de logs.
+  # SECRET_NAME se pasa como env var para que la app sepa qué secreto leer.
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${ProjectName}-task'
+      Cpu: !Ref TaskCpu
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
+      TaskRoleArn: !GetAtt ECSTaskRole.Arn
+      ContainerDefinitions:
+        - Name: streamlit-app
+          Image: !Ref ContainerImage
+          Essential: true
+          PortMappings:
+            - ContainerPort: !Ref ContainerPort
+              Protocol: tcp
+          Environment:
+            - Name: AWS_DEFAULT_REGION
+              Value: us-east-1
+            - Name: SECRET_NAME
+              Value: !Sub '${ProjectName}/rds/credentials'
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub '/ecs/${ProjectName}'
+              awslogs-region: us-east-1
+              awslogs-stream-prefix: streamlit
+
+  # ---------------------------------------------------------------------------
+  # 10. ECS Service
+  # ---------------------------------------------------------------------------
+  # Mantiene una tarea Fargate activa en todo momento.
+  # AssignPublicIp: ENABLED permite acceso directo vía IP pública
+  # (sin ALB, apropiado para el MVP).
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - RDSInstance
+      - DBSecret
+    Properties:
+      ServiceName: !Sub '${ProjectName}-service'
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          Subnets:
+            - !Ref PublicSubnetA
+            - !Ref PublicSubnetB
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OUTPUTS
+# ─────────────────────────────────────────────────────────────────────────────
+Outputs:
+
+  VPCId:
+    Description: ID de la VPC creada por este stack.
+    Value: !Ref VPC
+    Export:
+      Name: !Sub '${ProjectName}-vpc-id'
+
+  ECRRepositoryURI:
+    Description: >
+      URI del repositorio ECR. Usar para docker tag y docker push antes de
+      desplegar el ECS Service. Ejemplo:
+        docker build -t forecast-poc .
+        docker tag forecast-poc:latest <este-valor>
+        docker push <este-valor>
+    Value: !Sub '${AWS::AccountId}.dkr.ecr.us-east-1.amazonaws.com/${ECRRepository}'
+    Export:
+      Name: !Sub '${ProjectName}-ecr-uri'
+
+  RDSEndpoint:
+    Description: Endpoint de la instancia RDS PostgreSQL.
+    Value: !GetAtt RDSInstance.Endpoint.Address
+    Export:
+      Name: !Sub '${ProjectName}-rds-endpoint'
+
+  RDSPort:
+    Description: Puerto de conexion a RDS.
+    Value: !GetAtt RDSInstance.Endpoint.Port
+
+  SecretARN:
+    Description: ARN del secreto en Secrets Manager con las credenciales de RDS.
+    Value: !Ref DBSecret
+    Export:
+      Name: !Sub '${ProjectName}-secret-arn'
+
+  ECSClusterName:
+    Description: Nombre del cluster ECS.
+    Value: !Ref ECSCluster
+
+  ECSServiceName:
+    Description: Nombre del servicio ECS.
+    Value: !GetAtt ECSService.Name
+
+  LogGroupName:
+    Description: Nombre del log group en CloudWatch para los logs del contenedor.
+    Value: !Ref LogGroup
