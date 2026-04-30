@@ -382,31 +382,37 @@ Pantalla de bienvenida con descripción del producto y navegación a las funcion
 Vista agregada orientada a perfiles directivos. Incluye comparación ventas reales vs. pronóstico, benchmark contra baseline naive, métricas globales y evolución temporal.
 
 ![Dashboard](docs/images/app/dashboard.png)
+![Dashboard ECS](docs/images/app/ECS_dashboard_light.png)
 
 ### Inferencia individual
 Consulta granular a nivel producto-tienda. El usuario selecciona tienda y producto y obtiene el pronóstico del mes siguiente con comparación contra el período anterior.
 
 ![Inferencia](docs/images/app/inferencia.png)
+![Inferencia ECS](docs/images/app/ECS_inf_lightgbm.png)
 
 ### Generación batch
 Permite seleccionar una categoría completa, una tienda, o el catálogo completo y genera un archivo descargable con todos los pronósticos del grupo. Ideal para el caso de uso del Director de Finanzas (reporte mensual para el CFO).
 
 ![Batch](docs/images/app/batch.png)
+![Batch ECS](docs/images/app/ECS_batch_lightgbm.png)
 
 ### KPIs del modelo
 Métricas de evaluación (RMSE, MAE) con desglose por categoría. Permite identificar qué grupos de productos tienen mayor error de predicción y requieren atención del equipo de ML.
 
 ![KPIs](docs/images/app/KPIS.png)
+![KPIs ECS](docs/images/app/ECS_KPIS_lightgbm.png)
 
 ### Captura de feedback
 Formulario para que usuarios de negocio documenten observaciones sobre predicciones que no parecen correctas. Los registros se guardan en RDS y son accesibles para el equipo de ML.
 
 ![Feedback](docs/images/app/feedback.png)
+![Feedback ECS](docs/images/app/ECS_feedback_lightgbm.png)
 
 ### Productos problema
 Listado de todos los productos marcados como problemáticos por el negocio. Filtrable por estatus. Permite al equipo de ML priorizar qué series de tiempo investigar.
 
 ![Productos Problema](docs/images/app/productos_problema.png)
+![Productos Problema ECS](docs/images/app/ECS_prod_lightgbm.png)
 
 ---
 
@@ -447,16 +453,16 @@ _[Screenshot de RDS — agregar antes de entrega]_
 
 La infraestructura fue desplegada mediante CloudFormation. Los stacks correspondientes al cluster ECS, la instancia RDS y los recursos de red están en estado `CREATE_COMPLETE`.
 
-_[Screenshot de CloudFormation — agregar antes de entrega]_
+![CloudFormation](docs/images/app/CloudFormation_CreateComplete.png)
 
 ### Aplicación desplegada (URL pública)
 
 ![App Home](docs/images/app/ECS_home.png)  
-![Dashboard](docs/images/app/ECS_dashboard.png)  
-![Inferencia](docs/images/app/ECS_inferencia.png)  
-![KPIs](docs/images/app/ECS_KPIS.png)  
-![Feedback](docs/images/app/ECS_feedback.png)  
-![Productos Problema](docs/images/app/ECR_productosproblema.png)
+![Dashboard](docs/images/app/ECS_dashboard_light.png)  
+![Inferencia](docs/images/app/ECS_inf_lightgbm.png)  
+![KPIs](docs/images/app/ECS_KPIS_lightgbm.png)  
+![Feedback](docs/images/app/ECS_feedback_lightgbm.png)  
+![Productos Problema](docs/images/app/ECS_prod_lightgbm.png)
 
 ---
 
