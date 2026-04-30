@@ -33,11 +33,10 @@ Parameters:
 
   ContainerImage:
     Type: String
+    Default: 864475311845.dkr.ecr.us-east-1.amazonaws.com/streamlit-sales-forecast-app:v2
     Description: >
       URI completo de la imagen en ECR, incluyendo tag. Ejemplo:
       123456789012.dkr.ecr.us-east-1.amazonaws.com/forecast-poc:latest
-      Obtener el URI desde el Output ECRRepositoryURI después del primer deploy sin este parámetro,
-      hacer docker push, y luego actualizar el stack con este valor.
 
   ContainerPort:
     Type: Number
@@ -352,7 +351,7 @@ Resources:
       DBInstanceIdentifier: !Sub '${ProjectName}-db'
       DBInstanceClass: db.t3.micro
       Engine: postgres
-      EngineVersion: '15.4'
+      EngineVersion: '16.3'
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
       DBName: !Ref DBName
@@ -434,6 +433,14 @@ Resources:
               Value: us-east-1
             - Name: SECRET_NAME
               Value: !Sub '${ProjectName}/rds/credentials'
+          HealthCheck:
+            Command:
+              - CMD-SHELL
+              - curl -f http://localhost:8501/_stcore/health || exit 1
+            Interval: 30
+            Timeout: 10
+            Retries: 5
+            StartPeriod: 120
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -456,8 +463,9 @@ Resources:
       ServiceName: !Sub '${ProjectName}-service'
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref TaskDefinition
-      DesiredCount: 1
+      DesiredCount: 0
       LaunchType: FARGATE
+      HealthCheckGracePeriodSeconds: 120
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
