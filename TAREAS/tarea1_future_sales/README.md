@@ -21,41 +21,17 @@ Actualmente, el proceso de generación de pronósticos es manual, lo que limita 
 
 La solución se diseñó como un producto de datos desplegado en AWS, separando claramente las capas de aplicación, datos y machine learning.
 
-### Componentes principales:
+### Componentes principales
 
-- **Amazon ECS (Fargate)**  
-  Despliegue de la aplicación de Streamlit como interfaz web accesible vía URL pública.
-
-- **Amazon ECR**  
-  Repositorio de imágenes Docker utilizadas para contenerizar la aplicación.
-
-- **Amazon S3**  
-  Data lake donde se almacenan los datos analíticos, incluyendo:
-  - datos históricos
-  - predicciones
-  - métricas de evaluación
-
-- **AWS Glue Data Catalog**  
-  Catálogo de metadatos que permite estructurar los datos almacenados en S3.
-
-- **Amazon Athena**  
-  Motor de consultas SQL utilizado por la aplicación para acceder a los datos en S3.
-
-- **Amazon SageMaker**  
-  Utilizado para el entrenamiento y generación de predicciones de forma offline (batch).
-
-- **Amazon RDS (PostgreSQL)**  
-  Base de datos operacional donde se almacenan:
-  - feedback del negocio
-  - metadatos
-  - usuarios
-  - logs de uso
-
-- **AWS Secrets Manager**  
-  Gestión segura de credenciales para acceder a la base de datos.
-
-- **AWS CloudFormation**  
-  Despliegue de la infraestructura como código (IaC), asegurando reproducibilidad.
+- **Amazon ECS (Fargate)** — Despliegue de la aplicación Streamlit como interfaz web accesible vía URL pública.
+- **Amazon ECR** — Repositorio de imágenes Docker para contenerizar la aplicación.
+- **Amazon S3** — Data lake con datos históricos, predicciones y métricas de evaluación.
+- **AWS Glue Data Catalog** — Catálogo de metadatos que estructura los datos almacenados en S3.
+- **Amazon Athena** — Motor de consultas SQL para acceder a los datos en S3.
+- **Amazon SageMaker** — Entrenamiento y generación de predicciones de forma offline (batch).
+- **Amazon RDS (PostgreSQL)** — Base de datos operacional: feedback, metadatos, logs de uso.
+- **AWS Secrets Manager** — Gestión segura de credenciales de la base de datos.
+- **AWS CloudFormation** — Despliegue de infraestructura como código (IaC).
 
 ### Flujo general
 
@@ -73,31 +49,16 @@ La solución se diseñó como un producto de datos desplegado en AWS, separando 
 
 ![ERD](diagrams/ERD.png)
 
-La base de datos relacional en RDS se diseñó para soportar la capa operacional del producto.
+La base de datos relacional en RDS soporta la capa operacional del producto.
 
 ### Tablas principales
 
-- **categories**
-  - Catálogo de categorías de productos
-
-- **items**
-  - Información de productos
-  - Relación con categorías
-
-- **shops**
-  - Información de tiendas
-
-- **forecasts**
-  - Predicciones generadas por los modelos
-  - Nivel producto-tienda-mes
-
-- **model_metrics**
-  - Métricas de evaluación del modelo
-  - Comparación contra baseline naive
-
-- **business_feedback**
-  - Comentarios del negocio sobre predicciones
-  - Identificación de problemas
+- **categories** — Catálogo de categorías de productos
+- **items** — Información de productos, relación con categorías
+- **shops** — Información de tiendas
+- **forecasts** — Predicciones generadas, nivel producto-tienda-mes
+- **model_metrics** — Métricas de evaluación vs baseline naive
+- **business_feedback** — Comentarios del negocio sobre predicciones
 
 ### Relaciones
 
@@ -105,17 +66,13 @@ La base de datos relacional en RDS se diseñó para soportar la capa operacional
 - Un `item` puede tener múltiples `forecasts`
 - Un `shop` puede tener múltiples `forecasts`
 - Las métricas se calculan por combinación de item, shop y categoría
-- El feedback del negocio se vincula a productos, tiendas y categorías
+- El feedback se vincula a productos, tiendas y categorías
 
 ---
 
 ## 4. Aplicación
 
-Se desarrolló una aplicación interactiva utilizando **Streamlit**, desplegada sobre AWS, que permite a usuarios de negocio consumir el producto de datos sin necesidad de conocimientos técnicos.
-
-La aplicación está diseñada para cubrir los principales casos de uso del negocio: consulta, monitoreo, generación de pronósticos y retroalimentación.
-
-Las predicciones mostradas en la aplicación provienen de un modelo LightGBM entrenado sobre features con lags, ejecutado mediante un pipeline reproducible de preprocessing, training e inference.
+Se desarrolló una aplicación interactiva con **Streamlit**, desplegada en AWS, que permite a usuarios de negocio consumir el producto sin conocimientos técnicos. Las predicciones provienen de un modelo **LightGBM** entrenado con features de lags, ejecutado mediante un pipeline reproducible de preprocessing, training e inference.
 
 ---
 
@@ -123,7 +80,7 @@ Las predicciones mostradas en la aplicación provienen de un modelo LightGBM ent
 
 ![Home](docs/images/app/home.png)
 
-Pantalla principal donde se presenta el producto, su propósito y las funcionalidades disponibles.
+Pantalla de bienvenida del producto. Presenta el propósito del sistema y da acceso a todas las funcionalidades disponibles desde el menú lateral. Es el punto de entrada para cualquier usuario de negocio, sin importar su perfil técnico.
 
 ---
 
@@ -131,14 +88,7 @@ Pantalla principal donde se presenta el producto, su propósito y las funcionali
 
 ![Dashboard](docs/images/app/dashboard.png)
 
-Vista agregada del desempeño del modelo, incluyendo:
-
-- Comparación entre ventas reales y pronóstico
-- Benchmark contra baseline naive
-- Métricas clave (RMSE)
-- Evolución temporal de las predicciones
-
-Esta vista está orientada a perfiles directivos.
+Vista de alto nivel orientada a perfiles directivos. Muestra la comparación agregada entre ventas reales y pronóstico, el benchmark contra el baseline naive, las métricas globales del modelo (RMSE) y la evolución temporal de las predicciones. Permite al COO y al CFO tener una visión rápida del desempeño del sistema.
 
 ---
 
@@ -146,14 +96,7 @@ Esta vista está orientada a perfiles directivos.
 
 ![Inferencia](docs/images/app/inferencia.png)
 
-Permite consultar predicciones a nivel granular:
-
-- Selección por tienda
-- Selección por producto
-- Visualización de pronóstico más reciente
-- Comparación contra valores reales
-
-Esta vista permite análisis operativo detallado.
+Vista de consulta granular. El usuario selecciona una tienda y un producto específico y obtiene el pronóstico del mes siguiente junto con la comparación contra los valores históricos reales. Está orientada a analistas de planeación que necesitan revisar predicciones a nivel operativo.
 
 ---
 
@@ -161,13 +104,7 @@ Esta vista permite análisis operativo detallado.
 
 ![Batch](docs/images/app/batch.png)
 
-Permite ejecutar procesos de predicción masiva:
-
-- Por tienda
-- Por categoría
-- Catálogo completo
-
-Ideal para procesos de planeación y generación de reportes.
+Permite ejecutar pronósticos masivos seleccionando una categoría completa, una tienda o el catálogo completo. Los resultados se presentan en tabla descargable. Resuelve directamente el caso de uso del Director de Finanzas, que necesita un archivo semanal con pronósticos del mes siguiente para enviarlo al CFO.
 
 ---
 
@@ -175,14 +112,7 @@ Ideal para procesos de planeación y generación de reportes.
 
 ![KPIs](docs/images/app/KPIS.png)
 
-Muestra métricas clave del modelo:
-
-- RMSE
-- MAE
-- RMSE baseline naive
-- Mejora porcentual
-
-Incluye desglose por categoría para identificar áreas de mejora.
+Tablero de métricas de evaluación del modelo. Muestra RMSE, MAE, RMSE del baseline naive y la mejora porcentual, con desglose por categoría de producto. Permite al equipo de ML identificar qué segmentos tienen mayor error y requieren atención prioritaria.
 
 ---
 
@@ -190,13 +120,7 @@ Incluye desglose por categoría para identificar áreas de mejora.
 
 ![Feedback](docs/images/app/feedback.png)
 
-Permite a usuarios de negocio capturar observaciones sobre las predicciones:
-
-- Tipo de problema
-- Comentarios
-- Usuario
-
-El feedback se almacena en RDS y puede utilizarse para mejorar el modelo.
+Formulario para que analistas de negocio documenten observaciones sobre predicciones que no parecen correctas. El usuario indica el producto, el tipo de problema (sobreestimación, subestimación, otro) y un comentario en texto libre. El registro se almacena en RDS y queda disponible para el equipo de ML.
 
 ---
 
@@ -204,39 +128,13 @@ El feedback se almacena en RDS y puede utilizarse para mejorar el modelo.
 
 ![Productos Problema](docs/images/app/productos_problema.png)
 
-Listado de productos identificados como problemáticos:
-
-- Filtrado por estatus
-- Visualización de comentarios del negocio
-
-Facilita la priorización de mejoras del modelo.
+Listado consolidado de todos los productos marcados como problemáticos por el negocio. Filtrable por estatus (abierto, en revisión, cerrado). Permite al equipo de ML priorizar qué series de tiempo investigar y cerrar el ciclo de mejora continua del modelo.
 
 ---
 
 ## 5. Despliegue en AWS (ECS + ECR + LightGBM)
 
-Para llevar el producto a un entorno accesible para usuarios de negocio, la aplicación fue contenerizada con Docker y desplegada en AWS utilizando ECS con Fargate.
-
-El componente central del producto de datos es un modelo de **LightGBM**, diseñado para predecir ventas mensuales a nivel producto–tienda.
-
----
-
-### Características del modelo
-
-El modelo se entrena utilizando:
-
-- Variables históricas de ventas  
-- Features con rezagos (*lags*)  
-- Variables agregadas por tienda y producto  
-- Componentes de estacionalidad  
-
----
-
-### Pipeline de modelado
-
-1. **Preprocessing** — limpieza de datos, generación de features, construcción de variables lag  
-2. **Training** — entrenamiento del modelo LightGBM, validación temporal, evaluación con RMSE y MAE  
-3. **Inference** — generación de predicciones, almacenamiento en S3  
+La aplicación fue contenerizada con Docker y desplegada en AWS usando ECS con Fargate. El modelo central es **LightGBM**, entrenado para predecir ventas mensuales a nivel producto–tienda.
 
 ---
 
@@ -246,9 +144,15 @@ El modelo se entrena utilizando:
 |---------|-------|
 | RMSE modelo | 0.78 |
 | RMSE naive | 1.08 |
-| Mejora | 27.7% |
+| **Mejora** | **27.7%** |
 
-Esto confirma que el modelo captura patrones relevantes y genera valor para el negocio.
+---
+
+### Pipeline de modelado
+
+1. **Preprocessing** — limpieza de datos, generación de features y variables lag
+2. **Training** — LightGBM con validación temporal, evaluación con RMSE y MAE
+3. **Inference** — predicciones generadas y almacenadas en S3
 
 ---
 
@@ -256,24 +160,31 @@ Esto confirma que el modelo captura patrones relevantes y genera valor para el n
 
 **Predicción → Consumo → Feedback → Iteración**
 
-- Predicciones almacenadas en **S3**  
-- Consultas mediante **Athena**  
-- Visualización en **Streamlit (ECS)**  
-- Feedback almacenado en **RDS**  
+- Predicciones en **S3**, consultadas vía **Athena**
+- Visualización en **Streamlit (ECS)**
+- Feedback almacenado en **RDS**
+
+---
+
+### CloudFormation — infraestructura como código
+
+Toda la infraestructura del POC fue desplegada mediante una plantilla CloudFormation en un solo stack. La consola muestra todos los recursos en estado `CREATE_COMPLETE`, lo que confirma que el despliegue fue exitoso y reproducible sin intervención manual.
+
+![CloudFormation](docs/images/app/CloudFormation_CreateComplete.png)
 
 ---
 
 ### Cluster en ECS
 
-Se creó un cluster en Amazon ECS llamado `streamlit-cluster`, donde se ejecuta el servicio de la aplicación.
+Se creó el cluster `streamlit-cluster` en Amazon ECS. Este es el entorno de cómputo que agrupa y administra el servicio de la aplicación Streamlit en Fargate, sin necesidad de gestionar servidores subyacentes.
 
 ![ECS Cluster](docs/images/app/ECS_cluster.png)
 
 ---
 
-### Servicio y tareas desplegadas
+### Servicio y tareas activas
 
-Dentro del cluster se desplegó el servicio con una tarea activa corriendo de forma continua en Fargate.
+El servicio `streamlit-service` mantiene una tarea Fargate activa en todo momento. La consola confirma que la tarea está en estado `RUNNING`, lo que garantiza que la aplicación está disponible para los usuarios finales.
 
 ![ECS Tasks](docs/images/app/ECS_tasks.png)
 
@@ -281,7 +192,7 @@ Dentro del cluster se desplegó el servicio con una tarea activa corriendo de fo
 
 ### Configuración de red
 
-El contenedor se ejecuta con IP pública, permitiendo el acceso directo vía navegador al puerto `8501`.
+El contenedor corre con una IP pública asignada automáticamente por Fargate, expuesta en el puerto `8501`. Esta configuración permite el acceso directo desde cualquier navegador sin necesidad de un load balancer adicional, lo cual es apropiado para el alcance del MVP.
 
 ![ECS Networking](docs/images/app/ECS_networking.png)
 
@@ -289,33 +200,39 @@ El contenedor se ejecuta con IP pública, permitiendo el acceso directo vía nav
 
 ### Logs del contenedor
 
-Los logs del contenedor se visualizan directamente desde CloudWatch Logs para diagnóstico y monitoreo.
+Los logs del contenedor se envían automáticamente a CloudWatch Logs. Esto permite al equipo de plataforma monitorear el comportamiento de la aplicación en tiempo real, diagnosticar errores y auditar el uso del sistema sin necesidad de acceso SSH al contenedor.
 
 ![ECS Logs](docs/images/app/ECS_logs.png)
 
 ---
 
-### Registro de imágenes en ECR
+### Imagen en ECR
 
-La imagen Docker de la aplicación fue construida y subida a Amazon ECR.
+La imagen Docker de la aplicación fue construida localmente y publicada en Amazon ECR. ECR actúa como repositorio privado de imágenes, asegurando que solo el servicio ECS autorizado por IAM puede hacer pull de la imagen. La imagen está versionada con tags para facilitar rollbacks.
 
 ![ECR](docs/images/app/ECR_image.png)
 
 ---
 
-### CloudFormation — infraestructura como código
+### Aplicación desplegada en producción
 
-Toda la infraestructura fue desplegada mediante CloudFormation en estado `CREATE_COMPLETE`.
+La aplicación de Streamlit es accesible vía URL pública desde cualquier navegador, sin necesidad de instalar software ni tener acceso a AWS.
 
-![CloudFormation](docs/images/app/CloudFormation_CreateComplete.png)
+**URL pública:** http://54.221.9.247:8501/
 
 ---
 
-### Aplicación desplegada
+#### Home
 
-**IP Pública:** http://54.221.9.247:8501/
+La pantalla de inicio confirma que la app está corriendo en producción sobre ECS Fargate, accesible desde la IP pública del contenedor.
+
+![App Home](docs/images/app/ECS_home.png)
+
+---
 
 #### Dashboard ejecutivo
+
+Vista del dashboard en producción con datos reales del modelo LightGBM. Muestra la comparación entre ventas históricas y pronósticos generados, permitiendo al equipo directivo evaluar el desempeño del sistema de forma inmediata.
 
 ![Dashboard](docs/images/app/ECS_dashboard_light.png)
 
@@ -323,11 +240,15 @@ Toda la infraestructura fue desplegada mediante CloudFormation en estado `CREATE
 
 #### Inferencia individual
 
+Vista de inferencia en producción. El usuario selecciona una tienda y un producto y obtiene la predicción del modelo LightGBM para el mes siguiente, junto con el histórico de ventas reales para contexto.
+
 ![Inferencia](docs/images/app/ECS_inf_lightgbm.png)
 
 ---
 
 #### Generación batch
+
+Vista de generación batch en producción. Permite seleccionar una categoría o tienda completa y descarga el archivo con todos los pronósticos del grupo. Los datos provienen de las predicciones pre-computadas almacenadas en S3 y consultadas vía Athena.
 
 ![Batch](docs/images/app/ECS_batch_lightgbm.png)
 
@@ -335,17 +256,23 @@ Toda la infraestructura fue desplegada mediante CloudFormation en estado `CREATE
 
 #### KPIs del modelo
 
+Vista de KPIs en producción con métricas reales del modelo LightGBM. Confirma un RMSE de 0.78 frente a un naive de 1.08, representando una mejora del 27.7%. El desglose por categoría permite identificar segmentos con mayor error de predicción.
+
 ![KPIs](docs/images/app/ECS_KPIS_lightgbm.png)
 
 ---
 
 #### Captura de feedback
 
+Vista del formulario de feedback en producción. Los analistas de negocio pueden registrar observaciones directamente desde la interfaz. El registro se almacena en RDS PostgreSQL y queda disponible para el equipo de ML.
+
 ![Feedback](docs/images/app/ECS_feedback_lightgbm.png)
 
 ---
 
 #### Productos marcados para revisión
+
+Vista del listado de productos problema en producción. Consolida todos los registros de feedback capturados por el negocio, filtrable por estatus. Cierra el ciclo entre el negocio y el equipo de ML.
 
 ![Productos Problema](docs/images/app/ECS_prod_lightgbm.png)
 
