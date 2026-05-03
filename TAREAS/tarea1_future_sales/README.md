@@ -134,7 +134,7 @@ Listado consolidado de todos los productos marcados como problemáticos por el n
 
 ### Video demo
 
-[Ver demo de la aplicación ]https://drive.google.com/file/d/1ek-rg8Krzst8zVTxgGKBLcHa3tpLDnGI/view?usp=sharing
+[Ver demo de la aplicación ]https://drive.google.com/file/d/1Mk1uIBe0FG4dJ2RhAR7bFfPsvy0CF41S/view?usp=sharing
 
 ## 5. Despliegue en AWS (ECS + ECR + LightGBM)
 
