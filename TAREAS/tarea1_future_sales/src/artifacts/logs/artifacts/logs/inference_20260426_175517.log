@@ -1,0 +1,10 @@
+2026-04-26 17:55:17,559 - inference - INFO - Logger initialized. log_path=artifacts/logs/inference_20260426_175517.log
+2026-04-26 17:55:17,559 - inference - INFO - Starting inference step
+2026-04-26 17:55:17,560 - inference - INFO - inference_features_path=data/inference/features_test.csv.gz
+2026-04-26 17:55:17,560 - inference - INFO - model_artifact_path=artifacts/models/final_model.joblib
+2026-04-26 17:55:17,561 - inference - INFO - predictions_output_path=data/predictions/submission.csv
+2026-04-26 17:55:19,891 - inference - INFO - Loaded inference rows=214200 cols=8
+2026-04-26 17:55:19,891 - inference - INFO - n_feature_columns=7
+2026-04-26 17:55:21,802 - inference - INFO - Predictions generated. Clipped to [0, 20].
+2026-04-26 17:55:22,232 - inference - INFO - Saved submission -> data/predictions/submission.csv
+2026-04-26 17:55:22,233 - inference - INFO - Finished inference step. Duration: 4.67 seconds

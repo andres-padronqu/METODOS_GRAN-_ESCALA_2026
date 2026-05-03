@@ -1,0 +1,14 @@
+2026-04-26 17:39:55,382 - train - INFO - Logger initialized. log_path=artifacts/logs/train_20260426_173955.log
+2026-04-26 17:39:55,383 - train - INFO - Starting train step
+2026-04-26 17:39:55,383 - train - INFO - HAS_LGB=True
+2026-04-26 17:39:55,383 - train - INFO - prepared_features_path=data/prep/features_train.csv.gz
+2026-04-26 17:39:55,383 - train - INFO - model_output_path=artifacts/models/final_model.joblib
+2026-04-26 17:39:55,383 - train - INFO - val_block=33
+2026-04-26 17:39:55,383 - train - ERROR - Train step failed
+Traceback (most recent call last):
+  File "/Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/training/train.py", line 138, in main
+    require_file(prepared_features_path, "Corre primero: uv run python -m src.prep")
+  File "/Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/utils/validation.py", line 30, in require_file
+    raise FileNotFoundError(f"No existe {path}. {hint}")
+FileNotFoundError: No existe /Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/prep/features_train.csv.gz. Corre primero: uv run python -m src.prep
+2026-04-26 17:39:55,384 - train - INFO - Finished train step. Duration: 0.00 seconds
