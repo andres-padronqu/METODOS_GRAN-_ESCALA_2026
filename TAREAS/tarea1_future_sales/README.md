@@ -211,14 +211,13 @@ Listado de productos identificados como problemáticos:
 
 Facilita la priorización de mejoras del modelo.
 
+---
 
 ## 5. Despliegue en AWS (ECS + ECR + LightGBM)
 
 Para llevar el producto a un entorno accesible para usuarios de negocio, la aplicación fue contenerizada con Docker y desplegada en AWS utilizando ECS con Fargate.
 
 El componente central del producto de datos es un modelo de **LightGBM**, diseñado para predecir ventas mensuales a nivel producto–tienda.
-
-Este modelo permite capturar relaciones no lineales y patrones complejos en los datos, superando significativamente a un baseline naive.
 
 ---
 
@@ -231,38 +230,23 @@ El modelo se entrena utilizando:
 - Variables agregadas por tienda y producto  
 - Componentes de estacionalidad  
 
-Esto permite capturar dinámicas temporales relevantes en el comportamiento de la demanda.
-
 ---
 
 ### Pipeline de modelado
 
-El flujo de modelado sigue tres etapas principales:
-
-1. **Preprocessing**
-   - Limpieza de datos  
-   - Generación de features  
-   - Construcción de variables lag  
-
-2. **Training**
-   - Entrenamiento del modelo LightGBM  
-   - Validación temporal  
-   - Evaluación con RMSE y MAE  
-
-3. **Inference**
-   - Generación de predicciones  
-   - Construcción de dataset final  
-   - Almacenamiento en S3  
+1. **Preprocessing** — limpieza de datos, generación de features, construcción de variables lag  
+2. **Training** — entrenamiento del modelo LightGBM, validación temporal, evaluación con RMSE y MAE  
+3. **Inference** — generación de predicciones, almacenamiento en S3  
 
 ---
 
 ### Evaluación del modelo
 
-El modelo se compara contra un baseline naive:
-
-- RMSE modelo: 0.78  
-- RMSE naive: 1.08  
-- Mejora: 27.7%  
+| Métrica | Valor |
+|---------|-------|
+| RMSE modelo | 0.78 |
+| RMSE naive | 1.08 |
+| Mejora | 27.7% |
 
 Esto confirma que el modelo captura patrones relevantes y genera valor para el negocio.
 
@@ -270,26 +254,66 @@ Esto confirma que el modelo captura patrones relevantes y genera valor para el n
 
 ### Integración en la arquitectura
 
-El modelo está completamente integrado en el producto:
+**Predicción → Consumo → Feedback → Iteración**
 
 - Predicciones almacenadas en **S3**  
 - Consultas mediante **Athena**  
 - Visualización en **Streamlit (ECS)**  
 - Feedback almacenado en **RDS**  
 
-Esto permite cerrar el ciclo de mejora continua:
+---
 
-**Predicción → Consumo → Feedback → Iteración**
+### Cluster en ECS
+
+Se creó un cluster en Amazon ECS llamado `streamlit-cluster`, donde se ejecuta el servicio de la aplicación.
+
+![ECS Cluster](docs/images/app/ECS_cluster.png)
 
 ---
 
-### Visualización en producción
+### Servicio y tareas desplegadas
 
-A continuación se muestran las principales vistas del modelo ya desplegado:
+Dentro del cluster se desplegó el servicio con una tarea activa corriendo de forma continua en Fargate.
+
+![ECS Tasks](docs/images/app/ECS_tasks.png)
 
 ---
 
-IP Pública: http://54.221.9.247:8501/
+### Configuración de red
+
+El contenedor se ejecuta con IP pública, permitiendo el acceso directo vía navegador al puerto `8501`.
+
+![ECS Networking](docs/images/app/ECS_networking.png)
+
+---
+
+### Logs del contenedor
+
+Los logs del contenedor se visualizan directamente desde CloudWatch Logs para diagnóstico y monitoreo.
+
+![ECS Logs](docs/images/app/ECS_logs.png)
+
+---
+
+### Registro de imágenes en ECR
+
+La imagen Docker de la aplicación fue construida y subida a Amazon ECR.
+
+![ECR](docs/images/app/ECR_image.png)
+
+---
+
+### CloudFormation — infraestructura como código
+
+Toda la infraestructura fue desplegada mediante CloudFormation en estado `CREATE_COMPLETE`.
+
+![CloudFormation](docs/images/app/CloudFormation_CreateComplete.png)
+
+---
+
+### Aplicación desplegada
+
+**IP Pública:** http://54.221.9.247:8501/
 
 #### Dashboard ejecutivo
 
