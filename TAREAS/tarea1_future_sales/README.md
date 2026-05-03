@@ -132,6 +132,10 @@ Listado consolidado de todos los productos marcados como problemáticos por el n
 
 ---
 
+### Video demo
+
+[Ver demo de la aplicación ]https://drive.google.com/file/d/1ek-rg8Krzst8zVTxgGKBLcHa3tpLDnGI/view?usp=sharing
+
 ## 5. Despliegue en AWS (ECS + ECR + LightGBM)
 
 La aplicación fue contenerizada con Docker y desplegada en AWS usando ECS con Fargate. El modelo central es **LightGBM**, entrenado para predecir ventas mensuales a nivel producto–tienda.
