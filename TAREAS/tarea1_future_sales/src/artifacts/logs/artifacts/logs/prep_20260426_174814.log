@@ -1,0 +1,12 @@
+2026-04-26 17:48:14,877 - prep - INFO - Logger initialized. log_path=artifacts/logs/prep_20260426_174814.log
+2026-04-26 17:48:14,877 - prep - INFO - Starting prep step
+2026-04-26 17:48:14,877 - prep - INFO - raw_data_dir=data/raw
+2026-04-26 17:48:14,877 - prep - INFO - prepared_data_dir=/Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/prep
+2026-04-26 17:48:14,877 - prep - INFO - inference_data_dir=/Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/inference
+2026-04-26 17:48:16,110 - prep - INFO - Loaded sales_train rows=2935849
+2026-04-26 17:48:16,110 - prep - INFO - Loaded test rows=214200
+2026-04-26 17:48:16,111 - prep - INFO - Loaded items rows=22170
+2026-04-26 17:48:16,111 - prep - INFO - Using lags=[1, 2, 3]
+2026-04-26 17:50:46,216 - prep - INFO - Saved train features -> /Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/prep/features_train.csv.gz (rows=10913850, cols=8)
+2026-04-26 17:50:48,771 - prep - INFO - Saved test features -> /Users/andrespadronquintana/Desktop/PROY_PARCIAL/METODOS_GRAN-_ESCALA_2026/TAREAS/tarea1_future_sales/src/data/inference/features_test.csv.gz (rows=214200, cols=8)
+2026-04-26 17:50:48,772 - prep - INFO - Finished prep step. Duration: 153.90 seconds

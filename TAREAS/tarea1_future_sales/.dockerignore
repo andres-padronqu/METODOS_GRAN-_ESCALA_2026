@@ -1,0 +1,8 @@
+
+notebooks/
+docs/
+.git/
+.ipynb_checkpoints/
+*.ipynb
+*.tar.gz
+
